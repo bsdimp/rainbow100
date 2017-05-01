@@ -1,0 +1,2305 @@
+
+
+
+
+
+
+
+
+                                    WUTIL                                    _____
+
+
+                   The Rainbow 100 Winchester Disk Utility
+
+                        USER'S MANUAL for Version 3.2
+
+
+
+                                   NOTICE                                   NOTICE                                   NOTICE
+
+          This document and the software which it  describes  are
+          copyrighted.   While  the software is being distributed
+          for free, it is explicitly not being  released  to  the                                     ___
+          public domain.
+
+          The  copyright  holder  hereby  grants a license to use
+          this software, provided that the  following  conditions
+          are met:
+
+          (1)  This  software  may  be  used  freely  in private,
+          commercial, or governmental environments, but  may  not
+          be included in any packages offered for sale.
+
+          (2)  License  to  distribute  copies  of this software,
+          including its  documentation  and/or  source  code,  in
+          written  or  electronic  form,  is  granted provided no
+          modifications are made prior to distribution.  You must
+          distribute the software in exactly the  form  in  which
+          you  received  it,  including  this  copyright  notice.
+          Distribution of modified copies is strictly prohibited.
+          Further, you may not accept,  request,  or  expect  any
+          compensation  of  any  kind for such distribution (how-
+          ever, you may recover expenses for media and postage).
+
+          (3) In using this software, you acknowledge that it  is
+          provided  with no warranties whatsoever.  You agree not
+          to hold the author or any other individual or  corpora-
+          tion liable for any loss or damage whatsoever connected
+          with the software's use.
+
+          DEC  and  Rainbow  are  trademarks of Digital Equipment          ___       _______
+          Corporation.
+          MS-DOS is a trademark of Microsoft Corporation.          ______
+          CP/M, CCP/M, and  CP/M-86  are  trademarks  of  Digital          ____  _____       _______
+          Research, Inc.
+
+
+                                            Copyright 1986 Anthony G. Camas
+                                                        All Rights Reserved
+
+               This document was updated August 15, 1989  by  Vinzenz Esser
+
+                                                                    Page 2
+WUTIL VERSION 3.2                                            WHAT IS WUTIL?
+
+
+                             ******************
+                             * WHAT IS WUTIL? *
+                             ******************
+
+WUTIL, which stands vaguely for Winchester UTILity, was designed to address                                _          ____
+the needs of DEC Rainbow-100 users with Winchester Hard Disks.  It provides
+a  number  of  utility functions for maintaining these disks, many of which
+were not previously available, or not available  without  purchasing  addi-
+tional  software  from  DEC  or  other  companies.   WUTIL  provides  these
+functions to the hard disk user:
+
+          o The  ability  to format  and  initialize  hard disks
+            containing up to the Rainbow's limit of 67MB of disk
+            space.  The utility provides formatting capabilities
+            for standard DEC (and compatible)  drives as well as
+            those of nonstandard geometries.
+          o The ability  to  divide  hard disks  into as many as
+            fifteen partitions,  each with any size  from 1 thru
+            32 megabytes  (8 megabytes for MS-DOS versions prior
+            version 3.10 and CP/M),  in 1 track (8K byte) incre-
+            ments.   It is  possible to repartition  part of the
+            disk without having to backup and restore those par-
+            titions not changed.
+          o The ability to display full information about opera-
+            ting hard disks, including bad sector information.
+          o The ability to interactively examine the contents of
+            any sector of any track on the hard disk.
+          o The ability  to set  an auto-boot partition  for the
+            disk (to any of the 15 partitions).
+          o The ability to update the primary and secondary boot
+            loaders on the hard disk.
+          o The  ability  to,  on drives so equipped,  park  the
+            heads of the hard disk drive in a "shipping zone" to
+            provide  additional protection during transportation
+            of the disk drive.
+          o The ability to do all of the above  to a second hard
+            disk connected to the Rainbow via the Micro CHS dual
+            winchester controller  without the need to rearrange
+            cables.
+
+With WUTIL, you can purchase a small capacity (as small as 5MB) new or used
+DEC hard  disk  subsystem  and  upgrade  to  a  larger  drive  capacity  by
+purchasing  replacement  drive  hardware on the open market.  This can save
+you upwards of $1,000 on a 20MB upgrade, for instance  (though  third-party
+disk  drives  will obviously not be warranted or serviced by Digital).  You
+can also use WUTIL to allow you to put larger disk drives  in  your  system
+than the maximum 20MB subsystem currently offered by DEC.
+
+WUTIL  is  completely  self-contained.   The  distribution  kit you receive
+contains all files needed to perform all functions available in WUTIL.
+
+                                                                    Page 3
+WUTIL VERSION 3.2                                              INSTALLATION
+
+
+                              ****************
+                              * INSTALLATION *
+                              ****************
+
+When you receive WUTIL, you receive it as an ARChive file, named WUTIL.ARC.
+This file contains a number of files related to WUTIL.  Since  this  manual
+is  one  of  the  files in the ARChive, and you are reading it now, we will
+assume that you know how to use the ARC utility to remove  the  files  from
+the archive.
+
+The  files  contained  in WUTIL.ARC are listed below, together with a brief
+explanation of their functions:
+
+FILE          WHAT IT IS____          __________
+
+README.1ST    This file contains release notes for WUTIL.  It also contains
+              instructions for unpacking the files in the archive and tells
+              you which files you need and which you don't.   It contains a
+              copy of this list.  If last minute changes are made which are
+              not  reflected  in this manual,  this is the file  which will
+              contain  the additional information.   You should always type
+              the contents of this file before going any further.
+
+WUTIL.MAN     This  is  the user's manual  for WUTIL,  what you are reading
+              now.
+
+WUTIL.COM     This is the WUTIL main program.   It contains a large part of
+              what you run.
+
+WUTIL.000     This  is  the WUTIL  overlay file.   It contains  more of the
+              WUTIL program and must be on the disk for WUTIL to run.
+
+PREBOOT.LDX,  You only need these files  if  you  plan  on  formatting  and
+SECBOOT.LDX,  initializing disks,  or  if  you plan  on using the "copy new
+              boot loaders to hard disk" function.  They contain code which
+              is  copied  to  reserved areas  on the hard disk  during  the
+              initialization process.  These programs, the primary or "pre"
+              boot  loader  (PREBOOT.LDX)  and  the  secondary boot  loader
+              (SECBOOT.LDX)  are loaded from the hard disk  and executed by
+              the rainbow firmware when booting from the hard disk.
+
+WUTILDSK.DAT  You only need this file if you plan on formatting and initia-
+              lizing disks.   It contains  data about the geometry  of  the
+              most common disks used in Rainbow computers.  It is described
+              in more detail in the section on the formatting and initiali-
+              zing function.
+
+A separate ARChive is also distributed  which  contains  the  WUTIL  source
+code.  It is named WUTIL32S.ARC and contains its own documentation.
+
+In order to run WUTIL,  you must  (minimally)  have the files WUTIL.COM and
+WUTIL.000 on your disk.  When you run WUTIL, both of these files must exist
+either in your default directory or in some other directory which is listed
+in your PATH list.  WUTIL will not run unless it can find its overlay file.
+If you are going to format and initialize your disk,  then  you  will  also
+need PREBOOT.LDX, SECBOOT.LDX, and WUTILDSK.DAT.  Again, see the section on
+
+                                                                    Page 4
+WUTIL VERSION 3.2                                              INSTALLATION
+
+
+the format and initialize function for more information.
+
+Note  that  you  cannot  explicitly  run  WUTIL  from  another  drive.  For
+instance, if you put a diskette containing WUTIL and its overlay in drive B
+and drive B is not your default drive,  you  cannot  run  WUTIL  by  typing
+"B:WUTIL".  This will succeed in starting WUTIL.COM, but then WUTIL will be
+unable  to  locate  its  overlay file because it searches only your current
+directory and those directories in your PATH list.
+
+As of version 3.1 WUTIL contains support  for a second hard disk  connected
+to your Rainbow via the Micro CHS dual winchester controller.   Before try-
+ing to use WUTIL on the second hard disk, make sure the necessary driver is
+installed in your CONFIG.SYS file  as described in the Micro CHS controller
+board manual.
+
+                                                                    Page 5
+WUTIL VERSION 3.2                    NAVIGATING: START-UP AND THE MAIN MENU
+
+
+                               **************
+                               * NAVIGATING *
+                               **************
+
+STARTING UP AND THE MAIN MENU_____________________________
+
+WUTIL is run by simply typing  the  command  "WUTIL".   No  parameters  are
+expected  on the command line.  Because WUTIL uses special Rainbow fast I/O
+calls to read from the keyboard and  display  things  on  the  screen,  you
+cannot  redirect standard input and output (actually, you can, but it won't
+accomplish anything much).
+
+When WUTIL first runs, a copyright notice  and  disclaimer  are  displayed.
+Read  these  and  press the RESUME key (F7) to indicate that you agree with
+the terms that are displayed.  [Yes, it's annoying, but it keeps us all out
+of trouble.]   Before displaying the main menu screen  WUTIL  determines if
+your Rainbow contains one hard disk or two hard disks.   It does so by try-
+ing to locate the second hard disk driver in the Rainbow's memory. If WUTIL
+finds the driver,  which  you must have loaded via your CONFIG.SYS file, it
+assumes  two hard disks  are  present.   If it does not  find the driver it
+assumes only one hard disk  is  present.   Now the main menu screen will be
+displayed  and you can begin using WUTIL.   Note  that the main menu screen
+varies slightly depending on the number of hard disks present.  The diagram
+below shows a depiction of the main menu screen displayed,  if WUTIL deter-
+mined your Rainbow only contains one hard disk.
+
++-------------- RAINBOW 100 WINCHESTER DISK UTILITY Version 3.2 ---------------+
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                               WUTIL Main Menu                                |
+|              +------------------------------------------------+              |
+|              | 1.  Display current hard disk information      |              |
+|              | 2.  Dump contents of any disk sector on screen |              |
+|              | 3.  Format and Initialize hard disk            |              |
+|              | 4.  Re-partition the hard disk                 |              |
+|              | 5.  Change auto-boot partition                 |              |
+|              | 6.  Copy new boot loaders onto hard disk       |              |
+|              | 7.  Park hard disk heads for shipping          |              |
+|              | 8.  PRINT SCREEN Configuration Menu            |              |
+|              | 9.  EXIT from WUTIL and return to MS-DOS       |              |
+|              +------------------------------------------------+              |
+|                                                                              |
+|                                                                              |
+|           Use the arrow keys or the number keys to select an item.           |
+|          Then press RETURN, DO, or ENTER to confirm your selection.          |
+|                     (Or press EXIT to return to MS-DOS)                      |
+|                                                                              |
++------------------------------------------------------------------------------+
+
+The next diagram shows a depiction  of the main menu screen  displayed,  if
+WUTIL determined  your Rainbow contains  two hard disks.  In this case, any
+time the main menu is displayed, the CTRL-SHIFT-SELECT key combination lets
+you toggle between  physical drives 1 and 2.   The currently selected drive
+will always be displayed on the last line.  All subsequent actions selected
+from the main menu will be carried out on the currently selected drive.
+
+                                                                    Page 6
+WUTIL VERSION 3.2                    NAVIGATING: START-UP AND THE MAIN MENU
+
+
++-------------- RAINBOW 100 WINCHESTER DISK UTILITY Version 3.2 ---------------+
+|                                                                              |
+|                                                                              |
+|               Press CTRL-SHIFT-SELECT to select physical drive               |
+|                                                                              |
+|                               WUTIL Main Menu                                |
+|              +------------------------------------------------+              |
+|              | 1.  Display current hard disk information      |              |
+|              | 2.  Dump contents of any disk sector on screen |              |
+|              | 3.  Format and Initialize hard disk            |              |
+|              | 4.  Re-partition the hard disk                 |              |
+|              | 5.  Change auto-boot partition                 |              |
+|              | 6.  Copy new boot loaders onto hard disk       |              |
+|              | 7.  Park hard disk heads for shipping          |              |
+|              | 8.  PRINT SCREEN Configuration Menu            |              |
+|              | 9.  EXIT from WUTIL and return to MS-DOS       |              |
+|              +------------------------------------------------+              |
+|                                                                              |
+|                                                                              |
+|           Use the arrow keys or the number keys to select an item.           |
+|          Then press RETURN, DO, or ENTER to confirm your selection.          |
+|                     (Or press EXIT to return to MS-DOS)                      |
+|                                                                              |
++------------------------- Physical Drive 2 selected --------------------------+
+
+The inner box displays a list of the available options.   One of them (ini-
+tially the first one) is displayed in reverse video;  this is the "current"
+choice.
+  
+You can select the item you want from the menu in one of two ways.  One way
+is to use the up and down arrow keys on your keyboard.  If  you  press  the
+down  arrow, then the item below the current choice becomes the new current
+choice; it is highlighted in reverse video.  If you  press  the  up  arrow,
+then the item above the current choice becomes the new current choice.  The
+arrows "wrap around" at the top and bottom of the list; i.e., up arrow from
+choice  number  1 will select the last item (item 9 in the case of the main
+menu) and down arrow from the last choice will select the first item.
+
+The other way to select an item is to simply type its number.  You can  use
+the  digits either on the main keyboard or the numeric keyboard.  After you
+press a digit key, the item next to  the  number  you  pressed  immediately
+becomes the "current" choice and is highlighted in reverse video.
+
+After  you  use either method to select an item from the menu, pressing one
+of RETURN, ENTER (on the  numeric  keypad),  or  DO  (at  the  top  of  the
+keyboard)  confirms your selection and begins operation of the function you
+selected.
+
+Some of the functions selected from the main menu  will  display  secondary
+menus,  which  operate  exactly  the  same  way  as  the  main menu.  Other
+functions have their own methods of  input,  which  are  described  in  the
+sections on each function appearing later in this manual.
+
+FUNCTION KEYS_____________
+
+Although  WUTIL  will  occasionally  ask  you  to  type something in in the
+traditional sense, virtually all navigation through the functions of  WUTIL
+is  done  using  the function keys.  Generally, an attempt has been made to
+
+                                                                    Page 7
+WUTIL VERSION 3.2                       NAVIGATING: FUNCTION KEYS (GENERAL)
+
+
+give keys meanings that will be fairly easy to remember.  Not all  keys  do
+exactly  the  same  things  in  all  places,  but  we  did  strive to be as
+consistent as possible.  The list below describes what the various function
+keys do in a general way.  Where appropriate, more detail is given  in  the
+sections  on  the individual functions of WUTIL to explain a bit more about
+what the keys do in specific contexts.  Note that keys only work when WUTIL
+is waiting for input from the keyboard.  For instance, pressing MAIN SCREEN
+or PRINT SCREEN while WUTIL is in the process of  formatting  a  disk  will
+have no effect.
+
+Function keys commonly used by WUTIL are:
+
+PRINT SCREEN/F2    This key generally works at all times.   It causes WUTILPRINT SCREEN/F2PRINT SCREEN/F2
+                   to print the current screen display on your printer, or,
+                   if so configured,  put  the contents  of the screen in a
+                   file  on disk.   The  Print Screen  Configuration  Menu,
+                   accessible  from the Main Menu,  allows you to configure
+                   exactly how PRINT SCREEN will work.   For more important
+                   information  on how PRINT SCREEN works, see the descrip-
+                   tion  of  the Print Screen  Configuration Menu  later in
+                   this manual.
+
+RESUME/F7          This key  is most commonly used as a "confirmation" key.RESUME/F7RESUME/F7
+                   When WUTIL  is about  to take  specific important steps,
+                   particularly  those  which could destroy  much or all of
+                   what is on your disk,  you are asked to press the RESUME
+                   key to confirm your intentions.
+
+MAIN SCREEN/F9     This key can be pressed almost anywhere to return immed-MAIN SCREEN/F9MAIN SCREEN/F9
+                   iately  to  the WUTIL main menu.   It generally  has the
+                   effect of aborting the current operation.
+
+EXIT/F10           This key  can be pressed  almost  anywhere  to cause  anEXIT/F10EXIT/F10
+                   immediate exit  from WUTIL  and return to MS-DOS command
+                   level.   It generally has  the effect  of  aborting  the
+                   current operation.   However, it must be noted that exit                                        _______
+                   from WUTIL  is not always permitted.   Whenever  you use
+                   WUTIL  to format and initialize your disk or to reparti-
+                   tion your disk, WUTIL disallows use of the EXIT key from
+                   that point forward.  This is because such changes to the
+                   disk  require  that  your Rainbow  be  rebooted  so that
+                   MS-DOS will recognize the changed partition structure.
+
+ADDTNL OPTIONS/F14 This key  is probably  the least consistent in its usageADDTNL OPTIONS/F14ADDTNL OPTIONS/F14
+                   within WUTIL.   However,  in all cases, it generally has
+                   something  to do  with  its legend (additional options).
+                   In some cases,  pressing this key will display an optio-
+                   nal screen allowing  some special or nonstandard action.
+                   In other cases, it tells WUTIL to do something different
+                   than it would normally do (an alternative to RESUME). In
+                   other cases, it is a mode switch of some kind.
+
+HELP               This key  does pretty much  what it says,  but only in aHELPHELP
+                   few places.   Essentially,  the screens  which have  the
+                   most options are the ones which have online help.   Most
+                   screens have on-screen instructions which are sufficient
+                   in most cases,  but a few screens are too complex or too
+                   cluttered to include on-screen instructions.   For these
+
+                                                                    Page 8
+WUTIL VERSION 3.2                       NAVIGATING: FUNCTION KEYS (GENERAL)
+
+
+                   screens, there is usually a "Press HELP key for instruc-
+                   tions"  message  on the screen.   The HELP key generally
+                   does  not  work  on  screens  other  than the ones which
+                   specifically say it works.
+
+DO                 Pretty much what it says.   Certain screens require thatDODO
+                   you select parameters using other function keys and then
+                   press DO to indicate that you have finished and want the
+                   computer to start work.
+
+INSERT HERE,       These keys  are used  in  the partitioning  editor,  theINSERT HERE,INSERT HERE,
+REMOVE             first screen used in the Repartion Disk function.  ReferREMOVEREMOVE
+                   to those instructions for more information.
+
+SELECT             DEC probably intended  this key to be used in editors toSELECTSELECT
+                   mark positions in text, etc. In WUTIL it has an entirely
+                   different function,  but one  which is still  in keeping
+                   with the concept of "selecting".  In WUTIL,  it tends to
+                   be used to change among various options.   For instance,
+                   it is used in repartitioning  to cycle through the choi-
+                   ces for a partition's operating system.   In other situ-
+                   ations, it simply functions as a mode switch.
+
+PREV SCREEN,       Used  in  the  sector  dump/display  utility  to rapidlyPREV SCREEN,PREV SCREEN,
+NEXT SCREEN        scroll  through  the dump output.   Used in the "DisplayNEXT SCREENNEXT SCREEN
+                   Current Hard Disk Information" function to step back and
+                   forth through the various screens of information.
+
+UP, DOWN ARROWS    These generally tend to be used  for "move up" and "moveUP, DOWN ARROWSUP, DOWN ARROWS
+                   down".  In menus and other places where a "current line"
+                   is  to be  selected,  the arrows move  in  the indicated
+                   direction.   In the sector dump display, they scroll the
+                   display  in  the  indicated direction  a line at a time.
+                   And so on.
+
+LEFT, RIGHT ARROWS WUTIL usually uses these  not  to indicate direction butLEFT, RIGHT ARROWSLEFT, RIGHT ARROWS
+                   to indicate decreases (left arrow)  or  increases (right
+                   arrow). They are used to select track and sector numbers
+                   in the sector dump function, to increase or decrease the
+                   size of a partition in the partition editor, and so on.
+
+SHIFT and CTRL     When pressed  with certain function keys,  these tend toSHIFT and CTRLSHIFT and CTRL
+                   alter the keys' meanings in some way.   Generally,  CTRL
+                   is considered to be "bigger" than SHIFT, so that in some
+                   cases, pressing a key will have a certain effect,  while
+                   pressing it  with SHIFT  will have a similar  but larger
+                   effect, and pressing it  with CTRL  will have  a similar
+                   but much larger effect.   In other cases,  SHIFT is com-
+                   bined  with  a  function key  to make  it  do  something
+                   markedly different  than the key by itself.   These keys
+                   cannot  be combined with function keys  except  when the
+                   resulting combination  has  a specific  meaning  for the
+                   function being used.
+
+                                                                    Page 9
+WUTIL VERSION 3.2                                       MAIN MENU FUNCTIONS
+
+
+                   ***************************************
+                   * DESCRIPTIONS OF MAIN MENU FUNCTIONS *
+                   ***************************************
+
+On  the  pages  which  follow,  each of the main menu functions of WUTIL is
+described in detail.  In most cases, sample screens are shown  to  help  in
+understanding.
+
+Menu  functions are described in the same order in which they appear in the
+main menu.
+
+                                                                    Page 10
+WUTIL VERSION 3.2          MAIN MENU: DISPLAY CURRENT HARD DISK INFORMATION
+
+
+DISPLAY CURRENT HARD DISK INFORMATION_____________________________________
+
+This function displays several pages of geometry, partitioning,  and  other
+data about your hard disk.  In order to display this information, your hard
+disk must have been formatted and initialized with WUTIL or some other disk
+formatting utility.
+
++-------------- RAINBOW 100 WINCHESTER DISK UTILITY Version 3.2 ---------------+
+| -- DISK INFORMATION --                                                       |
+| Volume ID: RAINBOW                                                           |
+| System ID: 0,0                                                               |
+| Disk type is 14 (RD31), Partitioned                                          |
+| Disk contains 615 (0267H) cylinders on 4 surfaces (2460 logical tracks)      |
+| There are 16 (decimal) sectors per track and 512 (decimal) bytes per sector  |
+|                                                                              |
+| BAT:  Track 0000H Sector 03H (000AH sectors)                                 |
+| DPD:  Track 0001H Sector 0FH (0001H sectors)                                 |
+| OSN:  Track 0001H Sector 10H (0001H sectors)                                 |
+| BOOT: Track 0001H Sector 01H (000CH sectors)                                 |
+| AST:  Track 0000H Sector 0DH (0002H sectors)                                 |
+|                                                                              |
+| Alternate sector tracks: 0004H thru 000BH                                    |
+| Maintenance tracks:      0994H thru 0997H                                    |
+| Manufacturing tracks:    0998H thru 099BH                                    |
+|                                                                              |
+| Write pre-comp starts at cylinder 256; Step rate = 35 us                     |
+| Auto Boot configured for Track 0550H, logical drive G                        |
+|                                                                              |
+| NEXT SCREEN = operating system information                                   |
+| MAIN SCREEN = main menu                                                      |
++------------------------------------------------------------------------------+
+
+There  are four pages worth of data you can look at.  The first page, shown
+above, contains  general  disk  information.   This  tells  you  about  the
+geometry of your disk and other physical parameters.  It also tells you the
+specific  locations of various control blocks on the disk.  The information
+displayed on this screen comes from a structure on the disk  known  as  the
+"HOM"  (home)  block,  which  is  always  located at track 0, sector 2 on a
+formatted disk.
+
+                                                                    Page 11
+WUTIL VERSION 3.2          MAIN MENU: DISPLAY CURRENT HARD DISK INFORMATION
+
+
++-------------- RAINBOW 100 WINCHESTER DISK UTILITY Version 3.2 ---------------+
+| -- OPERATING SYSTEMS --                                                      |
+|  1  CP/M-86/80                                                               |
+|  2  MS-DOS                                                                   |
+|  3  CCP/M-86                                                                 |
+|  7  VENIX/Rainbow                                                            |
+| PREV SCREEN = general disk information                                       |
+| NEXT SCREEN = partitioning information                                       |
+| MAIN SCREEN = main menu                                                      |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
++------------------------------------------------------------------------------+
+
+If you press NEXT SCREEN, the next data which will be displayed is  a  list
+of  operating  systems  which  are  defined  for  the disk.  In order for a
+partition to be set up for a certain operating system, the operating system
+must appear in this list.  Currently, the  standard  list  shown  above  is
+likely  to  be  displayed  for all disks formatted with WUTIL or most other
+such utilities.  WUTIL currently provides no  mechanism  to  add  operating
+systems  to  this  list.   The four operating systems listed must be in the
+order shown, as their positions are known  by  their  respective  operating
+systems.   This information comes from a block on the disk called the "OSN"
+(operating system name) block.
+
+                                                                    Page 12
+WUTIL VERSION 3.2          MAIN MENU: DISPLAY CURRENT HARD DISK INFORMATION
+
+
++-------------- RAINBOW 100 WINCHESTER DISK UTILITY Version 3.2 ---------------+
+| -- DEFINED PARTITIONS --                                                     |
+|                                                                              |
+| Start   End   Total              Part                                        |
+| Track  Track  Tracks    Size     Name      Drive    O/S            Boot      |
+|                                                                              |
+|  000C   030B   0300    6.000MB  MSDOS-1      E:   MS-DOS                     |
+|  030C   054F   0244    4.531MB  MSDOS-2      F:   MS-DOS                     |
+|  0550   0793   0244    4.531MB  MSDOS-3      G:   MS-DOS             *       |
+|  0794   0993   0200    4.000MB  CPM-1        E:   CP/M-86/80                 |
+|                                                                              |
+| PREV SCREEN = operating system information                                   |
+| NEXT SCREEN = bad sector information                                         |
+| MAIN SCREEN = main menu                                                      |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
++------------------------------------------------------------------------------+
+
+Pressing NEXT SCREEN again yields a display similar to the one above, which
+lists all the partitions defined for your disk.  For  each  partition,  the
+(hexadecimal)  starting and ending track numbers are shown, followed by the
+(hexadecimal) total number of tracks, followed by the size of the partition
+in megabytes (WUTIL considers a megabyte to be 1K  x 1K bytes, or 1,048,576
+bytes -- two to the twentieth power).   This is followed by the partition's
+name,  then the logical unit by which  the  partition  is referenced in its
+operating system,  and  the name of the operating system itself.   The last
+column contains an asterisk ("*")  if the partition is the partition  which
+has been selected as the auto-boot partition.   There can,  at most, be one
+auto-boot partition; there may be none.
+
+                                                                    Page 13
+WUTIL VERSION 3.2          MAIN MENU: DISPLAY CURRENT HARD DISK INFORMATION
+
+
++-------------- RAINBOW 100 WINCHESTER DISK UTILITY Version 3.2 ---------------+
+| -- BAD SECTORS (TRACK/SECTOR; HEX ADDRESSES) --                              |
+|                                                                              |
+| 0123/01                                                                      |
+| 0138/08                                                                      |
+| 013A/06                                                                      |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+| Total bad sectors: 3                                                         |
+| PREV SCREEN = partitioning information                                       |
+| MAIN SCREEN = main menu                                                      |
++------------------------------------------------------------------------------+
+
+The final page of output lists those sectors which, according to bad sector
+information  recorded  on  the  disk,  are  bad.  The track number is shown
+first, followed by the sector number.  Both are shown in hexadecimal.  This
+screen can display a maximum of 128 bad sectors; if you have more than this
+many, only the first 128 will actually be shown.  However, the  "total  bad
+sectors" count at the bottom of the screen should be correct.  It should be
+emphasized  that  this is a list of sectors which are listed as bad sectors
+in control blocks on the disk.  You may have  bad  sectors  which  are  not
+listed, or you may have good sectors which are listed, depending on whether
+or not this information was written correctly by the formatting program you
+used.   Unfortunately,  the  only  way  to  be  sure  the  list  you see is
+absolutely correct is to reformat your disk using a verify option  so  that
+an  up  to date list of bad sectors can be compiled.  On the other hand, it
+is fortunate that sectors do not tend to change from good to bad or bad  to
+good,  so  this  information  should generally be reliable unless there was
+something wrong with the utility you used to format your disk.
+
+
+FUNCTION KEYS USED IN THIS SECTIONFUNCTION KEYS USED IN THIS SECTIONFUNCTION KEYS USED IN THIS SECTION
+
+The following function keys can be used while examining the  "Current  Hard
+Disk Information":
+
+NEXT SCREEN        Advances to the next screen in sequence.   Does not workNEXT SCREENNEXT SCREEN
+                   when the last screen is displayed.
+
+PREV SCREEN        Returns  to the previous screen  in sequence.   Does notPREV SCREENPREV SCREEN
+                   work when the first screen is displayed.
+
+MAIN SCREEN        Terminates the display  and returns  to the  WUTIL  mainMAIN SCREENMAIN SCREEN
+                   menu.
+
+                                                                    Page 14
+WUTIL VERSION 3.2          MAIN MENU: DISPLAY CURRENT HARD DISK INFORMATION
+
+
+
+RETURN             Advances to the next screen  in sequence,  or returns toRETURNRETURN
+                   the WUTIL main menu if the last screen is displayed.
+
+BACKSPACE/F12      Returns to the previous screen  in sequence,  or returnsBACKSPACE/F12BACKSPACE/F12
+                   to the WUTIL main menu if the first screen is displayed.
+
+                                                                    Page 15
+WUTIL VERSION 3.2     MAIN MENU: DUMP CONTENTS OF ANY DISK SECTOR ON SCREEN
+
+
+DUMP CONTENTS OF ANY DISK SECTOR ON SCREEN__________________________________________
+
+This  function  allows you to look at what's on your disk.  By specifying a
+track and sector number and pressing the DO key, you  tell  WUTIL  to  read
+that  sector  into  memory  and display it for you on the screen.  When you
+first call this function from the main menu, a help screen is displayed:
+
++-------------- RAINBOW 100 WINCHESTER DISK UTILITY Version 3.2 ---------------+
+|         +--------+                                        +--------+         |
+|         |  0000  |                                        |   01   |         |
+|         +--Track-+                                        +-Sector-+         |
+|                                                                              |
+| +--xF xE xD xC xB xA x9 x8|x7 x6 x5 x4 x3 x2 x1 x0  offs  0123456789ABCDEF-+ |
+| |  General instructions for sector dump facility:                          | |
+| |  * LEFT and RIGHT ARROWs decrease or increase sector number by 1's       | |
+| |  * SHIFT LEFT/RIGHT ARROWs decrease/increase track number by 1's         | |
+| |  * CTRL LEFT/RIGHT ARROWs decrease/increase track number by 10's         | |
+| |  * CTRL SHIFT LEFT/RIGHT ARROWs decrease/increase track number by 100's  | |
+| |  * After selecting track and sector, pressing DO reads & displays, e.g.: | |
+| |  20 20 20 20 20 47 46 45|20 20 20 20 44 43 42 41  0000  ABCD    EFG      | |
+| |    <---------- data in hexadecimal -------------  addr  ----in ASCII---> | |
+| |    Display lines are read from the address out; text is read normally;   | |
+| |    Hex is read RIGHT TO LEFT (This may appear odd, but it makes for more | |
+| |    "natural" reading of multi-byte numeric values -- high order first!). | |
+| |  * UP and DOWN ARROWs and NEXT SCREEN and PREV SCREEN scroll display     | |
+| |  * SELECT key toggles radix of track & sector (but dump is always hex)   | |
+| |  * The ADDTNL OPTIONS key toggles sector xlate mode (for partition data) | |
+| |  * The HELP key redisplays this text                                     | |
+| |  * The MAIN SCREEN key returns to the WUTIL main menu, EXIT goes to DOS  | |
+| +--------------------------------------------------------------------------+ |
++------------------------------------------------------------------------------+
+
+This screen gives you general instructions on how to use  the  sector  dump
+facility.   As  mentioned  above, the general idea is to select which track
+and sector you want to examine by using the left and right arrow keys,  and
+then  press  the  DO key, which reads the data for the requested sector and
+displays it.  Then  you  can  use  the  up  and  down  arrow  keys  or  the
+PREV  SCREEN and NEXT SCREEN keys to scroll the display and examine all 512
+bytes of the sector (256 bytes -- half of it -- will fit on the  screen  at
+any one time).
+
+
+SECTOR SKEWING AND YOUSECTOR SKEWING AND YOUSECTOR SKEWING AND YOU
+
+Often,  this  function will be useful for examining data near the beginning
+of the disk -- data which is used by system and diagnostic  utilities  (and
+WUTIL) to determine how the disk is partitioned, etc.  But you can also use
+the  sector  dump facility to examine data within the partitions devoted to
+your operating system(s).  If you do this, you should be aware of something
+called "sector skewing" and how it effects what you are looking at.
+
+Your hard disk spins very fast -- on the order  of  several  thousand  RPM.
+Data  is stored in tracks -- circular paths some particular radius from the
+disk spindle -- and each track contains 16 "sectors" of data (512 bytes  in
+each  sector).   When  you want to read data from several sectors in a row,
+which is often the case, the system does it one sector at a time.  It moves
+
+                                                                    Page 16
+WUTIL VERSION 3.2     MAIN MENU: DUMP CONTENTS OF ANY DISK SECTOR ON SCREEN
+
+
+the read/write heads to the correct track and then waits  for  the  correct
+sector  to  spin  by.  As it does, 512 bytes of data are read from the disk
+and fed to the operating system.  By the time the 512 bytes from the  first
+sector  are processed, the next sector, which follows immediately, has long
+since gone by, so the system has to wait for  the  disk  to  make  its  way
+around  again  before the next 512 bytes of data is available.  This wastes
+time, even at 3600 RPM.
+
+In order to decrease the amount of time it is necessary to wait before  the
+correct  "next"  sector comes around, the MS-DOS, CP/M, and CCP/M operating
+systems perform something called "skewing" of sectors.   This  actually  is
+done  on  both  Floppy and Winchester disks, but we are concerned here only
+with that which occurs on Winchester  disks.   What  happens  is  that  the
+operating  system  performs  a  translation  of  the  sector  number  it is
+"logically" using to a "physical" sector  number  appearing  on  the  disk.
+All  three  operating  systems use the same skewing algorithm.  Sector 1 of
+each track is actually written to sector 1.  But  it  changes  from  there.
+When  these  operating  systems  go to  retrieve  "logical"  sector 2, they
+actually end up reading the contents of sector 8, halfway around the  disk.
+Logical  sector  3  is  mapped  to  physical sector 15, logical sector 4 to
+physical sector 6, and so on.  The  idea  is  that,  when  reading  several
+sectors  in  a  row,  the  disk will be pretty close to (and definitely not
+past) the next sector by the time the first one has been processed.
+
+While this skewing of logical tracks makes for  faster  disk  accesses,  it
+does  make  things mighty confusing for someone trying to read the contents
+of the disk and analyze it.  Therefore, WUTIL has a sector skew mode  built
+into  the  sector dump facility.  By pressing the "ADDTNL OPTIONS" key, you
+can turn on WUTIL's sector skew mode.  In this mode, you can  step  through
+logical  sectors  as  operating  systems  would, and WUTIL will perform the
+necessary translation to show  you  the  physical  sectors  actually  being
+referenced.
+
+Note  that  sector  skewing occurs within partitions only.  The data in the
+first few and last few tracks  of  the  disk,  which  are  used  mainly  by
+diagnostic  programs  and  not  by  operating systems, remain unskewed.  In
+their case, what you see is what you get, and you should not use the  WUTIL
+sector skewing mode.
+
+
+WHAT THE DISPLAY LOOKS LIKEWHAT THE DISPLAY LOOKS LIKEWHAT THE DISPLAY LOOKS LIKE
+
+The dump displayed by WUTIL of a given sector shows the data in hexadecimal
+and  as  ASCII  characters.  The scheme used for this display might confuse
+you a little, because it is somewhat non-standard  (you've  probably  never
+seen  it before unless you use a VAX computer; VAX/VMS's DUMP utilties tend
+to do the same thing).  However, it does have a number  of  advantages  and
+it's not too hard to get used to.
+
+As  shown  in the help screen, the dump display contains a number of lines,
+each of which shows 16 bytes of data.  The  address  (or  offset  from  the
+beginning  of  the sector, actually) is shown more or less in the center of
+the line.  The data in hexadecimal is to the left and the data in ASCII  is
+to  the  right.   What  makes WUTIL's dump format different from most other
+utilities you have probably used is that the hexadecimal data is  displayed
+in  a "right to left" format, rather than the usual "left to right" format.
+
+                                                                    Page 17
+WUTIL VERSION 3.2     MAIN MENU: DUMP CONTENTS OF ANY DISK SECTOR ON SCREEN
+
+
+The  hex  representation  for  the  first  of  the  sixteen  bytes  appears
+immediately  to the left of the address.  The next byte appears to the left
+of the first byte, and so on.  The sixteenth and last byte appears  at  the
+far  left.   Unless  your  natural language is one of the Middle-Eastern or
+Asian lanaguages that is also written that way, this  will  initially  be a
+bit  unnatural for you.  So why did we do it this way?  Because when values
+of more than 8 bytes are stored in the computer, they are stored  with  the
+lower order parts in lower addresses.
+
+Consider  this example:  Starting at offset 0, a particular sector contains
+the byte value 10 (hex), followed by the word value 1234 (hex) and the word
+value 5000 (hex).  In a "traditional" dump display,  this  might  be  shown
+like this:
+
+0000   10 34 12 00 50 ..........
+
+But in WUTIL's dump, you see this:
+
+                                           .......... 50 00 12 34 10   0000
+
+Suppose  you are scanning this dump trying to find the "1234" value.  Which
+dump is easier to find it in?
+
+So that's the justification.  Hopefully, you will come  to  appreciate  it.
+But  even  if  you  don't,  that's  the  way  it  is, and we hope the above
+explanation will keep you from getting too confused.
+
+The ASCII display in the WUTIL dump has been embelished  somewhat  to  take
+advantage  of the "special" characters displayable by the Rainbow computer.
+Instead of using the period character to  replace  anything  which  is  not
+printable  (which  is  especially  confusing  when what you are dumping has
+ACTUAL periods in it), WUTIL  tries  to  be  clever  and  displays  certain
+special  characters  in special ways.  Below is a list of what is displayed
+how:
+
+Printable          Normal printable characters  are displayed as is,  obvi-
+                   ously.
+Null               The ASCII  value 0,  the "null" character code,  is dis-
+                   played using a hollow box character.
+Backspace          The ASCII value 8, which is the character code for back-
+                   space, is displayed  using a double "<" character.  This
+                   symbol is actually the "quote" symbol in some languages,
+                   but it is never displayed for normal text.
+Horizontal Tab     The ASCII value 9, which is the character code for hori-
+                   zontal tab,  is displayed  using  the  special composite
+                   "HT" character,  where the letters H and T are displayed
+                   in one character position.
+Line Feed          The ASCII value 10, which is the character code for line
+                   feed,  is displayed  using  the  special  composite "LF"
+                   character.
+Form Feed          The ASCII value 12, which is the character code for form
+                   feed,  is displayed  using  the  special  composite "FF"
+                   character.
+Carriage Return    The  ASCII  value 13,  which is  the character code  for
+                   carriage return,  is displayed using  the special compo-
+                   site "CR" character.
+
+                                                                    Page 18
+WUTIL VERSION 3.2     MAIN MENU: DUMP CONTENTS OF ANY DISK SECTOR ON SCREEN
+
+
+All Others         All other non-printable  characters  appear as an inver-
+                   ted question mark.
+
+Note that for the purposes of displaying these characters, the  parity  bit
+(high order bit) is removed before such determinations are made.  Also note
+that,  since  printers  do  not  have the same character set as the Rainbow
+screen, these displays may look slightly different when sent to  a  printer
+or a file with the PRINT SCREEN key.  For more information, please read the
+section on the PRINT SCREEN Configuration Menu.
+
+
+FUNCTION KEYS USED IN THIS SECTIONFUNCTION KEYS USED IN THIS SECTIONFUNCTION KEYS USED IN THIS SECTION
+
+The following function keys are active in the sector dump section of WUTIL:
+
+LEFT ARROW,        These keys  are used  to select the track and sector youLEFT ARROW,LEFT ARROW,
+RIGHT ARROW        want to read.   Right  moves ahead  in the disk  (towardRIGHT ARROWRIGHT ARROW
+                   higher track and sector numbers),   left  moves backward
+                   (toward lower track and sector numbers).  Pressing these
+                   arrow keys  alone  moves one sector at a time.  Pressing
+                   them  in conjunction  with the SHIFT key moves one track
+                   at a time, and pressing them with the CTRL key moves ei-
+                   ther ten or sixteen tracks at a time,  depending  on the
+                   radix being used for track and sector (see SELECT key).
+
+SELECT             This key is used to switch between decimal and hexadeci-SELECTSELECT
+                   mal display of the track and sector numbers.  The initi-
+                   al mode is hexadecimal.   Pressing SELECT will alternate
+                   modes each time it is pressed.  You can  tell which mode
+                   is currently selected because hexadecimal track and sec-
+                   tor numbers  are displayed  with leading zeroes, whereas
+                   decimal ones  are displayed  with leading spaces.   Note
+                   that  the numeric part  of  the dump display  is  always
+                   shown in hexadecimal, regardless of this mode.
+
+ADDTNL OPTIONS     This key turns sector  skewing mode  on and off (see de-ADDTNL OPTIONSADDTNL OPTIONS
+                   scription in the previous section).  When sector skewing
+                   mode is on,  the sector display appears in the form "nn=
+                   mm", where "nn" is the logical sector number and "mm" is
+                   the resulting physical sector number.
+
+DO                 After  selecting  a track and sector,  pressing this keyDODO
+                   causes WUTIL  to read  the requested data  from the disk
+                   and  display it in the window where the help information
+                   initially appears.
+
+UP ARROW,          These  keys scroll  the dump display in the window.  TheUP ARROW,UP ARROW,
+DOWN ARROW         up arrow key  moves back  toward lower addresses and theDOWN ARROWDOWN ARROW
+                   down arrow moves forward toward higher addresses.
+
+NEXT PAGE,         These keys  "scroll"  the dump display  in the window  aNEXT PAGE,NEXT PAGE,
+PREV PAGE          page at a time.  Actually,  since  the  window  displaysPREV PAGEPREV PAGE
+                   exactly  half  of the available  data at any given time,
+                   PREV PAGE  simply displays  the first 256 bytes and NEXT
+                   PAGE displays the last 256 bytes.
+
+                                                                    Page 19
+WUTIL VERSION 3.2     MAIN MENU: DUMP CONTENTS OF ANY DISK SECTOR ON SCREEN
+
+
+
+HELP               Pressing  this key puts the help information (that whichHELPHELP
+                   is initially displayed) back in the dump window area for
+                   your reference.
+
+MAIN SCREEN        Leaves the sector dump facility and returns to the WUTILMAIN SCREENMAIN SCREEN
+                   main menu.
+
+EXIT               Exits WUTIL and returns to MS-DOS command level.EXITEXIT
+
+A  few other pieces of information about the sector dump facility should be
+noted:
+
+When you press the DO key to read a sector, you will get an  error  message
+instead  of  data  if  the  requested  track  and  sector could not be read
+(usually because they are off the end of the disk).  If the  data  is  read
+successfully,  it  is  initially shown in bright (bold) mode.  You can then
+use the up/down arrow keys or the next/prev page keys to move around within
+the data.  If you change track or sector numbers by  using  the  left/right
+arrow  keys  or the ADDTNL OPTIONS (skew mode) key, the previous display of
+data gets dimmer (no longer bold).  This is essentially to remind you  that
+the  track  and  sector  numbers you see at the top of the screen no longer
+correspond to the data at the bottom of the screen.
+
+The sector dump facility will not allow you to decrease your  track  number
+beyond  track  0 (obviously).  It also has a maximum track number, which is
+the last track of your hard disk.   The last track is considered  to be the
+the last logical track before the manufacturing cylinder.
+
+                                                                    Page 20
+WUTIL VERSION 3.2                MAIN MENU: FORMAT AND INITIALIZE HARD DISK
+
+
+FORMAT AND INITIALIZE HARD DISK_______________________________
+
+One of WUTIL's most important functions is the one that lets you format  or
+reformat  your hard disk.  In most cases, it should only be necessary to do
+this once, though there may be times when you wish to reformat a disk which
+has already been formatted.
+
++-------------- RAINBOW 100 WINCHESTER DISK UTILITY Version 3.2 ---------------+
+|                                                                              |
+|                Please select the type of formatting you want.                |
+|           Selections nearer the top are slower but more reliable.            |
+|                                                                              |
+|                        Format/Initialize Options Menu                        |
+|               +----------------------------------------------+               |
+|               | 1.  Format with Double Verify and Initialize |               |
+|               | 2.  Format with Single Verify and Initialize |               |
+|               | 3.  Format Without Verify and Initialize     |               |
+|               | 4.  Re-Initialize Only (already formatted)   |               |
+|               +----------------------------------------------+               |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|           Use the arrow keys or the number keys to select an item.           |
+|          Then press RETURN, DO, or ENTER to confirm your selection.          |
+|        (Or press MAIN SCREEN for main menu, EXIT to return to MS-DOS)        |
+|                                                                              |
++------------------------------------------------------------------------------+
+
+When you request the Format and Initialize function from the main menu, the
+first thing you see is a submenu, as  shown  above.   This  menu  lets  you
+select the type of formatting you want WUTIL to perform.  In general, there
+are  three types of things WUTIL does in connection with the formatting and
+initialization of your disk.  They are:
+
+FORMATTING:  This operation,  done  once  for  each  track  on  your  disk,
+performs  a  low-level  hardware  function  necessary  to  make  your track
+accessible as sixteen separate sectors.  It also, as a  side-effect,  fills
+each  sector  on  the  track with data containing all "one" bits (FF hex in
+each byte).
+
+VERIFYING:  This operation, done once for each sector in each  track  (each
+of  the  sixteen  sectors of a track is verified after a track is formatted
+and before the next track is formatted), involves testing  the  reliability
+of  your  disk by writing some data to the sector and then reading it back,
+making sure  it  is  what  was  written.   WUTIL  can  do  a  single-verify
+operation,  where  this is done once, or a double-verify, where it is tried
+twice with two  different  bit  patterns.   It  can  also  skip  this  step
+altogether  if  you wish.  After verifying (or both verifications if double
+verify mode is used), the track is filled with data containing  all  "zero"
+bits (0 in each byte).
+
+                                                                    Page 21
+WUTIL VERSION 3.2                MAIN MENU: FORMAT AND INITIALIZE HARD DISK
+
+
+INITIALIZING:   This  operation,  done  after  all formatting is completed,
+involves writing control structures and boot data to the first  few  tracks
+on  your  disk.   This  readies  the  disk  for partitioning and use by the
+various operating systems.
+
+The initial menu shown allows you to control how much of  these  are  done.
+You have four choices, and as the menu says, those closer to the top of the
+list  are  more reliable (they test your disk more thoroughly) but are also
+therefore slower.
+
+A couple of notes here are useful.  First, it should be understood that bad
+sectors on your disk can generally not be detected solely in the formatting
+process.  Thus, if you use the Format Without Verify mode, WUTIL will  more
+than  likely assume that your disk has no bad sectors.  This could become a
+problem later if your disk does, in fact, have bad sectors.
+
+On the other hand, you should not panic if your  disk  came  with  a  "test
+results"  sheet  showing that it has defects, yet WUTIL does not report any
+bad sectors, even when you  use  one  of  the  verification  options.   The
+testing  of  disks done by manufacturers often uses a different disk format
+than that used on the Rainbow (often it is an IBM PC-compatible format with
+17 sectors per track); there are also other variables that can account  for
+such a discrepency.
+
+Finally,  you  should  note  that  the fourth option, "Re-initialize Only",
+simply rewrites the control structures onto the disk and cannot be used  if
+the disk has never been formatted.
+
+How  much  time does all this take?  It depends on the option you use.  The
+table below contains some numbers you can use to estimate:
+
+Option             Tracks per Second      Time to do 128 Tracks (1 MB)______             _________________      ____________________________
+
+No Verify               26.6                             5 sec
+Single Verify            1.7                     1 min, 16 sec
+Double Verify            0.9                     2 min, 25 sec
+
+It should be noted that the "Initialize Only" option takes about  the  same
+amount  of  time  on any size drive, and that that time is negligible (five
+seconds or less).
+
+Should you use single verify or double verify?  Even though  double  verify
+is the first option shown and thus the "default" one upon entry, you should
+generally  resist  the temptation to press RETURN right away.  Instead, you
+should probably choose the single  verify  mode  in  virtually  all  cases.
+Double  verify  takes  a very long time, particularly on very large drives,
+and is probably only useful when you have a drive which seems  to  have  an
+intermittent  problem  (it  might  also  be  appropriate   for   first-time
+formatting  of brand new drives, but remember that it'll take a long time).
+If you DO decide to use double verify (or single verify, for that  matter),
+you  should  use  the  chart  above to estimate how long a coffee break you
+should expect to take.
+
+When should you use the format without verify option?  Generally, we'd like
+to say "never", because this option is generally incapable of detecting bad
+sectors on your disk (if you have some and they go  undetected,  they  will
+
+                                                                    Page 22
+WUTIL VERSION 3.2                MAIN MENU: FORMAT AND INITIALIZE HARD DISK
+
+
+come  back  to haunt you later).  However, if you know your disk to have no
+bad sectors and you need to format the disk quickly, this  IS  the  fastest
+formatting option.
+
++-------------- RAINBOW 100 WINCHESTER DISK UTILITY Version 3.2 ---------------+
+|                                                                              |
+|                             -- DISK TYPE MENU --                             |
+|                                                                              |
+| A  5MB  153 cyl 4 hds RD50/ST506/etc.                                        |
+| B 10MB  306 cyl 4 hds RD51/ST412/etc.                                        |
+| C 20MB  615 cyl 4 hds RD31/ST225/etc.                                        |
+| D 32MB  512 cyl 8 hds RD52/Q540/etc.                                         |
+| E 40MB  820 cyl 6 hds RD32/ST251/etc.                                        |
+| F 67MB 1024 cyl 8 hds RD53/1325/etc.                                         |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|   Press the letter corresponding to the type of disk you are initializing    |
+|          If your disk type is not shown above, press ADDTNL OPTIONS          |
+|          Or press MAIN SCREEN to abort and return to the main menu           |
+|                                                                              |
+|                                                                              |
++------------------------------------------------------------------------------+
+
+Once  you  have  selected the formatting mode you will use, the next screen
+you are shown displays some common disk types and asks you to select  which
+type  you have on your system.  This screen is depicted above.  The list of
+disk types shown is the current list of  disk  types  as  distributed  with
+version 3.2 of WUTIL.  In order to begin formatting, you should type one of
+the  letters  shown  on the screen.  If your disk type is not shown in this
+list, then you will have to tell WUTIL about your disk's parameters.  To do
+this, press the ADDTNL  OPTIONS  key  instead  of  one  of  the  drive-type
+letters.  This will result in the display of a disk information screen.
+
+                                                                    Page 23
+WUTIL VERSION 3.2                MAIN MENU: FORMAT AND INITIALIZE HARD DISK
+
+
++-------------- RAINBOW 100 WINCHESTER DISK UTILITY Version 3.2 ---------------+
+|                                                                              |
+|                Please enter information about your disk below                |
+| IDENTIFICATION                                                               |  IDENTIFICATION  IDENTIFICATION  ______________  ______________  ______________
+| Description (for future retrieval):                                          |
+| Type code for HOM block:             0                                       |
+|                                                                              |
+| GEOMETRY (assumed: 512 bytes/sector, 16 sectors/track)                       |  GEOMETRY (assumed: 512 bytes/sector, 16 sectors/track)  GEOMETRY (assumed: 512 bytes/sector, 16 sectors/track)  ________  ________  ________
+| Number of Cylinders:                 100                                     |
+| Number of Surfaces (Heads):          4                                       |
+|                                                                              |
+| PHYSICAL CHARACTERISTICS                                                     |  PHYSICAL CHARACTERISTICS  PHYSICAL CHARACTERISTICS  ________________________  ________________________  ________________________
+| Write Precompensation first cyl/4:   1                                       |
+| Step Rate (.5ms units, 0 is 35us):   6                                       |
+|                                                                              |
+| OTHER OPTIONS                                                                |  OTHER OPTIONS  OTHER OPTIONS  _____________  _____________  _____________
+| Tracks to reserve for alt. sectors:  1                                       |
+|                                                                              |
+|    Enter requested info, pressing RETURN or up or down arrows after each     |
+|        Pressing just RETURN or arrows at any item leaves value as is         |
+|        Pressing MAIN SCREEN at any time aborts and goes to main menu         |
+|             Refer to WUTIL documentation for further information             |
+|                                                                              |
++------------------------------------------------------------------------------+
+
+This  screen  is  used  to enter information about a new type of disk which
+WUTIL does not know.  Your information will be stored for  the  future,  so
+that after you enter this information, the new disk type will appear in the
+"lettered" list of disk types in the future.
+
+To  enter  the  information,  just  type what is requested on the indicated
+lines.  You can follow each entry with the RETURN key or  with  the  up  or
+down  arrow keys.  RETURN and down arrow go to the next item, up arrow goes
+to the previous item.  Except for the first  item  (the  description),  all
+items  have  an  initial,  default  value,  though  some  of them are quite
+arbitrary and not of much use.
+
+Descriptions of each of the items follows:
+
+DESCRIPTION (FOR FUTURE RETRIEVAL):  This is the name  you  are  giving  to
+this type of disk, the name which will appear in the list of disk types the
+next  time  you  use  the  format  and  initialize option.  You can use any
+combination of characters you like, except something  that  is  already  in
+use.
+
+TYPE  CODE  FOR  HOM  BLOCK:  Each disk has a type code stored in its "home
+block".  WUTIL recognizes the following type codes: 6 for RD53, 8 for RD52,
+10 for RD51, 12 for RD50, 14 for RD31, and 16 for RD32.   This value is not
+terribly important, actually. Only the values for RD50, RD51, and RD31 have
+been defined by DEC, the others are "extrapolated" values which we made up.
+
+NUMBER OF CYLINDERS, NUMBER OF SURFACES:  These are the two most  important
+pieces  of information, and you must have them in order to format your disk
+properly.  If you have a disk drive and you don't know how  many  cylinders
+or surfaces it has, then you don't have much of a bargain.    Note that the
+design of the controllers  available for the Rainbow  only allow  a maximum
+number of cylinders of 1024 and a maximum number of heads of 8.
+
+                                                                    Page 24
+WUTIL VERSION 3.2                MAIN MENU: FORMAT AND INITIALIZE HARD DISK
+
+
+WRITE  PRECOMPENSATION  FIRST  CYLINDER/4:  The way disks work is such that
+data written to higher-numbered cylinders, which are closer to  the  center
+of  the  disk,  can  "bleed  over"  and  interfere  with  data  in adjacent
+cylinders.  In order to diminish this effect, the disk controller  can  use
+reduced  write  current  when data is written to higher-numbered cylinders.
+You must specify which cylinder is the first for this so-called "write pre-
+compensation".  The  number  you  supply  is  multiplied  by  four  in  the
+controller  to  get  the  actual  number  of the first cylinder where write
+pre-compensation occurs.  So if you use the value 100, for  instance,  then
+reduced  write  current will be used in cylinder 400 and above.  This value
+can be difficult to determine, and it is  not  highly  critical.   A  value
+around  half  the  number  of cylinders on the disk is probably appropriate
+(actually, abound one eighth the number of cylinders, since the  value  you
+enter  is multiplied by four).  [n.b. We now have it from a reliable source
+that the DEC Winchester controller doesn't  actually  do  write  precompen-
+sation  at  all  --  that  the  electronics for this feature were deemed of
+dubious value and were omitted from the final  design  of  the  board.   We
+can't  confirm  this,  but  it  does  suggest  that you should not spend an
+inordinate amount of time trying to figure out what value to use here!]
+
+STEP RATE:  The hard disk controller moves the  read/write  heads  of  your
+disk drive from cylinder to cylinder by issuing "step pulses".  If the disk
+heads  are  positioned in cylinder 5 and the controller is asked to seek to
+cylinder 10, the controller would issue five step pulses to the disk drive.
+The step rate controls how fast these  step  pulses  are  issued,  or  more
+accurately, the interval between them.  You supply a coded value here which
+gives  the  step  rate  in  one-half  millisecond  units.   So  3 means 1.5
+milliseconds, 4 means 2.0 milliseconds, and so on.  Zero yields a step rate
+of approximately 35 microseconds, which is 0.035  milliseconds.   Picking a
+value  for  step  rate can be difficult if you don't have detailed specifi-
+cations for your drive.  If the value you specify is  too  low,  your  disk
+drive  may not be able to keep up with your controller and seek errors will
+occur.  If the value you specify is too high, disk accesses will be  slower
+than  need  be.   Obviously, when in doubt, it is better to err on the high
+side.  The value of "6", 3.0 milliseconds, seems to be popular with DEC for
+many of its drives; it's probably a good place to start if you  don't  know
+what  to  use.   However,  it  should  be noted on the other hand that most
+modern drives contain electronics to "buffer" step pulses and will actually
+work optimally when these step pulses  are  sent  as  rapidly  as  possible
+rather  than  slowly in order to try and keep up with the head motion.  Our
+recommendation here is, if you have a little time, try using the value  "0"
+first  and  see  if  the  drive  works  correctly  during  periods of heavy
+activity.  If it does, this might be appropriate.  Of course, if  you  have
+specifications  for  your drive and they say what step rate to use, then no
+experimentation is necessary: just use a rate equal to or slower  than  the
+one recommended by the manufacturer.
+
+TRACKS  TO  RESERVE  FOR ALTERNATE SECTORS:  When your disk has bad sectors
+within CP/M and  CCP/M  partitions,  it  is  possible  to  substitute  good
+"alternate"  sectors for these bad sectors to avoid writing to bad spots on
+the disk.  You must decide how many tracks of your disk you wish to reserve
+for the purpose of supplying these alternate good sectors.   Remember  that
+each  track  you  specify  contains  16 sectors available for substitution.
+Also remember that MS-DOS does not use alternate sectors, so if you plan on
+having only MS-DOS partitions on your disk,  you  should  use  the  minimum
+value,  one.   If you do have CP/M and CCP/M partitions, you can have up to
+
+                                                                    Page 25
+WUTIL VERSION 3.2                MAIN MENU: FORMAT AND INITIALIZE HARD DISK
+
+
+50 alternate sector tracks.  But  such  a  value  is  absurd.   Most  disks
+manufactured  today  have  very  few bad sectors, and wasting 50 tracks for
+this purpose is silly.  Using a value of 10 for large disks (20MB or  more)
+and  less  for  smaller  disks should be more than adequate.  Remember that
+every track allocated for use as alternate sector space represents 8K bytes
+less of usable data space for your partitions.
+
+After you have selected your disk type, or entered your new disk type using
+the  ADDTNL  OPTIONS-produced  screen,  WUTIL  will  begin  formatting  and
+initializing your disk (or just initializing if  you  chose  that  option).
+Formatting starts at the last available track and proceeds backward through
+track  zero.   Actually, WUTIL does not start formatting with the very last
+track on the disk, because the tracks contained in the disk's last cylinder
+(i.e., the last 4 tracks for drives with 4 surfaces, the last 8 for  drives
+with  8  surfaces,  etc.) contain, on many drives, special data about drive
+defects written during the manufacturing process.  WUTIL avoids  formatting
+over these tracks so as to avoid destroying any such data.
+
+While  formatting and verifying your disk, WUTIL displays the current track
+number and number of bad sectors found so far so  you  can  keep  track  of
+WUTIL's progress.
+
+Once  formatting  is completed, you should proceed to the "repartition hard
+disk" function to define the partitions for your disk.  Unlike  some  other
+similar  utilities, WUTIL will not assume that you want any particular kind
+of partitions and pre-partition your disk for you.
+
+
+FILES YOU NEED FOR FORMATTING AND INITIALIZINGFILES YOU NEED FOR FORMATTING AND INITIALIZINGFILES YOU NEED FOR FORMATTING AND INITIALIZING
+
+The Format and Initialize function of WUTIL requires  that  you  have  some
+files  in your directory that are not required for other functions.  If you
+try to use the Format and Initialize  function  and  these  files  are  not
+present  in  your  current  directory or some directory on your PATH, WUTIL
+will display an error message and not permit you to proceed.
+
+You need three additional files, all of which are supplied with WUTIL.  The
+first of these files, WUTILDSK.DAT,  has  already  been  discussed  in  the
+installation  section.  This file contains information about the disk types
+shown in the disk selection screen, and receives any  new  disk  types  you
+define for future storage.
+
+The  other  two files are called PREBOOT.LDX and SECBOOT.LDX.  These files,
+which contain boot loaders for the hard disk, are also provided with WUTIL.
+You may have other versions of these files around (they are  also  provided
+by  DEC  on  their Winchester Utilities Disk), but it is a good idea to use
+the ones supplied with WUTIL.  These loaders correctly handle drives  which
+have 6 or 8  rather  than  four  surfaces (the DEC loaders do not) and will
+handle up to 15 partitions, rather than the maximum of four handled by  the
+DEC-supplied loaders.
+
+                                                                     Page 26
+WUTIL VERSION 3.2                     MAIN MENU: RE-PARTITION THE HARD DISK
+
+
+RE-PARTITION THE HARD DISK__________________________
+
+Re-partitioning  your  hard  disk  (or  partitioning it for the first time)
+under WUTIL involves two steps.  The  first  step,  called  the  "partition
+editor",  is where you decide how your disk will be set up.  WUTIL displays
+a description of your disk's current partitions and allows  you  to  change
+them.  You make whatever changes you wish, and then you press the DO key to
+begin the actual re-partitioning process.
+
++-------------- RAINBOW 100 WINCHESTER DISK UTILITY Version 3.2 ---------------+
+|           WUTIL Partition Editor: Press HELP key for instructions            |
+|                                                                              |
+|    #  Tracks (MB)  Operating System   #  Tracks (MB)  Operating System       |
+|                                                                              |
+|    1.  768 (6.000) MS-DOS            16.                                     |
+|    2.  580 (4.531) MS-DOS            17.                                     |
+|    3.  580 (4.531) MS-DOS            18.                                     |
+|    4.  512 (4.000) CP/M-86/80        19.                                     |
+|    5.                                20.                                     |
+|    6.                                21.                                     |
+|    7.                                22.                                     |
+|    8.                                23.                                     |
+|    9.                                24.                                     |
+|   10.                                25.                                     |
+|   11.                                26.                                     |
+|   12.                                27.                                     |
+|   13.                                28.                                     |
+|   14.                                29.                                     |
+|   15.                                30.                                     |
+|                                                                              |
+|   Disk capacity is 2440 tracks (19.063MB).  All tracks allocated.            |
+|                                                                              |
++------------------------------------------------------------------------------+
+
+A  sample  screen from the partition editor is shown above.  Each partition
+you have is listed, with its size in tracks and megabytes and the  name  of
+the  operating system to which the partition is assigned.  You start with a
+picture of your disk as it is currently partitioned.  Then,  as  you  press
+various  editing keys, the results of your edits are continually displayed.
+The bottom  line  shows  the  number  of  tracks  you  have  available  for
+partitioning  (the  actual  disk  capacity is more than this, actually, but
+this figure shows the amount of space you have to work with when you  build
+your  partitions;  it  excludes  control  areas  on the disk and the like).
+Initially, the message "All tracks allocated" is displayed to tell you that
+you have accounted for all the tracks, all 2440 of them in this  case.   As
+you  move things around, change the sizes of partitions, and so forth, this
+part of the bottom line will change to tell you that  you  have  under-  or
+over-allocated.   You  can  only press the DO key, signalling that you want
+partitioning to begin, when the "All tracks allocated" message appears.
+
+Each region of the disk can  be  allocated  either  to  a  partition  for a
+certain operating system or to a gap.  Gaps are simply sections of the disk                                 ___
+which  you  do not want allocated to any partition.  Initially after a disk
+has been initialized, the entire partition area of the disk is occupied  by
+one  very  large  gap.   In  practice, gaps are not really useful for much.
+However, they do represent a convenient way to skip over a particularly bad
+
+                                                                    Page 27
+WUTIL VERSION 3.2                     MAIN MENU: RE-PARTITION THE HARD DISK
+
+
+portion of the disk which  contains  many  bad  sectors.   You  could  also
+conceivably  use  gaps to reserve a portion of your disk for a use you know
+you will be putting it to later, though this type of  use  certainly  seems
+less than useful.
+
+Actual partitions  allocated to  operating systems  must fall  within these
+limits:
+                                
+   Operating System           Minimum Size                Maximum Size   ________________        __________________        ______________________
+   CP/M, CCP/M,
+          MS-DOS V2        1 MB  / 128 tracks        8 MB     / 1024 tracks
+   MS-DOS V3.10            1 MB  / 128 tracks        31.99 MB / 4095 tracks
+   VENIX                   0.172 /  22 tracks        32 MB    / 4096 tracks
+
+NOTE:   It is important  to run WUTIL under the version of MS-DOS which you
+will use when you access the disk after partitioning.   Gaps are allowed to
+be  as small as one track or as large as the capacity of the disk.
+
+
+FUNCTION KEYS USED IN THIS SECTIONFUNCTION KEYS USED IN THIS SECTIONFUNCTION KEYS USED IN THIS SECTION
+
+Initially, the first partition displayed by the partition editor  is  shown
+in  reverse video and considered to be the "current" partition.  The up and
+down arrow keys select a different partition to be current, much like their
+use in menus.  Various other keys perform editing operations  with  respect
+to the current partition.
+
+Here is a list of the function keys and what they do:
+
+UP ARROW,          As described above,  moves the "current line" indicationUP ARROW,UP ARROW,
+DOWN ARROW         to the previous or next line.DOWN ARROWDOWN ARROW
+
+LEFT ARROW,        Decreases  (left arrow)  or increases  (right arrow) theLEFT ARROW,LEFT ARROW,
+RIGHT ARROW        size of the partition on the current  line by one track.RIGHT ARROWRIGHT ARROW
+                   Or, when combined with the SHIFT or CTRL key,  decreases
+                   or  increases  the size  of  the partition  by 10 or 100
+                   tracks, respectively.
+
+SELECT             Changes the current partition's operating system. CyclesSELECTSELECT
+                   through  the three standard operating systems as well as
+                   "gap".  There is also a side-effect associated with this
+                   function.   When you change the operating system associ-
+                   ated with a partition, WUTIL checks to see that the cur-
+                   rent size  of the partition is within the values permit-
+                   ted  for  an  operating system  and  adjusts  it to  the
+                   nearest boundary if necessary.  Thus, if a partition is,
+                   for instance,  defined as a gap smaller  than 128 tracks
+                   and the SELECT key is pressed, the size is automatically
+                   increased to 128 tracks,  the minimum size for an opera-
+                   ting system partition.
+
+INSERT HERE        Adds  a new partition  BEFORE the current partition, mo-INSERT HEREINSERT HERE
+                   ving the current partition and all those below it down a
+                   line. The newly-inserted partition becomes the "current"
+                   partition after this operation.  Initially, the new par-
+                   tition is created  as a gap.   Its initial size is equal
+                   to the amount of space  still unallocated  but always at
+                   least 1 track.
+
+                                                                    Page 28
+WUTIL VERSION 3.2                     MAIN MENU: RE-PARTITION THE HARD DISK
+
+
+REMOVE             Deletes the current partition  and moves  all others up.REMOVEREMOVE
+                   The partition  below this one  becomes  the  new current
+                   partition.   The definition of  the deleted partition is
+                   saved  in a special buffer  where  it can be re-inserted
+                   one or more times using the SHIFT/INSERT HERE function.
+
+SHIFT+INSERT HERE  Inserts a new partition  before  the  current partition.SHIFT+INSERT HERESHIFT+INSERT HERE
+                   The partition inserted  has the parameters  saved by the
+                   last REMOVE operation.
+
+SHIFT+UP ARROW,    "Moves"  the  current partition  up  (up arrow)  or downSHIFT+UP ARROW,SHIFT+UP ARROW,
+SHIFT+DOWN ARROW   (down arrow) by  exchanging it with the partition beforeSHIFT+DOWN ARROWSHIFT+DOWN ARROW
+                   or after it,  respectively.  These keys, plus the "cut &
+                   paste" feature  offered  by REMOVE and SHIFT/INSERT HERE
+                   allow you  to rearrange  partitions  into the order  you
+                   want.
+
+ADDTNL OPTIONS     Displays  a list  of  additional functions  which can beADDTNL OPTIONSADDTNL OPTIONS
+                   accessed  by  pressing  a letter key.   Currently, these
+                   functions are:
+               B   "Balances"  the sizes of all partitions.  All partitions               B               B
+                   (and gaps) currently shown are sized such that all avai-
+                   lable space  is  used and the partition sizes are equal.
+                   If  the space  on the drive  cannot  be  divided exactly
+                   equally among all the partitions, the first partition(s)
+                   will be  one track larger  than  the last  partition(s).
+                   Note that this will  not work properly  if the resulting
+                   partitions  would be  too big  or  too small  for  their
+                   operating systems.  When such a case occurs, WUTIL auto-
+                   matically adjusts  those partitions'  sizes to be within
+                   the  required limits;  manual readjustment will  then be
+                   necessary  to allocate or deallocate the odd tracks cre-
+                   ated by this adjustment.
+               F   Adjusts  the  size  of the current partition  for  "best               F               F
+                   fit". The current partition size is increased or decrea-
+                   sed as required so that all tracks will be allocated, or
+                   as close  as  possible in order  to fit within  the size
+                   range permitted for the partition.
+
+DO                 Ends the partition editing session and begins repartiti-DODO
+                   oning.   All tracks must be allocated (no more, no less)
+                   to either operating systems or gaps before this function
+                   key will be accepted.
+
+HELP               Displays a summary of the available function keys.HELPHELP
+
+MAIN SCREEN        Aborts re-partitioning and returns to the main menu.MAIN SCREENMAIN SCREEN
+
+EXIT               Aborts  re-partitioning  and  exits  to  MS-DOS  commandEXITEXIT
+                   level.
+
+                                                                    Page 29
+WUTIL VERSION 3.2                     MAIN MENU: RE-PARTITION THE HARD DISK
+
+
+THE ACTUAL RE-PARTIONING PHASETHE ACTUAL RE-PARTIONING PHASETHE ACTUAL RE-PARTIONING PHASE
+
+Once  the  DO  key  is  pressed, the partitions defined are checked against
+several limits and restrictions, as follows:
+
+  * No operating system can  have  more  than  four  partitions.   For  the
+    purpose  of  this  check,  CP/M  and  CCP/M  are  considered  to be one
+    operating system -- that is, the total number of  partitions  allocated
+    to CP/M plus those allocated to CCP/M must not exceed four.
+  * There can be no more than fifteen actual partitions (not gaps).
+  * Each partition (not gap) must be clear of bad sectors in its first four
+    tracks.
+
+If  any of the above tests fail, an error message is displayed and you must
+continue in the partition editor until you have solved the problem.
+
+Assuming these tests succeed, you are then given one last chance (actually,
+two last chances) to confirm that you really want to partition  your  disk.
+WUTIL  will ask you to confirm your intentions and then to re-confirm them.
+Once you have confirmed this twice, re-partitioning begins.
+
+In re-partitioning, WUTIL has two jobs.  One of them is to prepare each  of
+the  partitions  you  have created so that files can be stored there by the
+designated   operating  system.   The  second  is  to  actually  write  new
+information about the partitions of your disk into the  designated  control
+block  near  the beginning of your disk.  This last piece of information is
+actually what tells your operating systems where the partitions are.
+
+Re-partitioning also involves manipulation of alternate sector assignments.
+Alternate sectors which, after  partitioning, are allocated for bad sectors
+which are not within CP/M or CCP/M partitions are deallocated.  Bad sectors
+within CP/M and CCP/M  partitions  which  do  not  have  alternate  sectors
+assigned have such assignments made.
+
+WUTIL has a special feature designed to save you time when you only want to
+re-partition  some  part  of  your  disk,  leaving  the  rest as is.  WUTIL
+compares the partitions  you  have  after  re-partioning  with  those  that
+existed  before  re-partitioning.   If  any  of  the  new   partitions   is
+"compatible" with a corresponding old partition, WUTIL gives you the option
+of  skipping  the re-initialization of that partition's data.  Thus, if you
+have four equal MS-DOS partitions and you change one  of  them  to  a  CP/M
+partition,  the other three MS-DOS partition will remain as they were, with
+the data they had before re-partitioning.  WUTIL considers a new  partition
+to be compatible with an old partition if:
+
+  (a) They have the same position (starting track) and length; and
+  (b) They are either both MS-DOS partitions, both VENIX partitions or both
+      CP/M or CCP/M partitions.
+
+One of the implications of rule (b) is that you can change a CP/M partition
+to  a  CCP/M  partition  (with  the  standard directory size) or vice-versa
+without losing any data.
+
+If WUTIL believes that two partitions are compatible, it displays a  screen
+during  the  re-partitioning process advising you of this and asking you if
+you want it to take its default action (leave the partition  alone)  or  if
+
+                                                                    Page 30
+WUTIL VERSION 3.2                     MAIN MENU: RE-PARTITION THE HARD DISK
+
+
+you  want  it  to re-initialize the partition anyway.  This allows you some
+control over the process.  However, be warned of this:  WUTIL does not tell                           _______
+you ahead of time when it decides it is going to initialize a partition; it                                     __
+only tells you if it is not going to.  This means that if you goof in  your
+repartitioning  and move things you didn't mean to move (or, God forbid, if
+WUTIL for some reason decides to defy logic and re-initialize something  it
+shouldn't),  you  could  lose  a  great  deal  of data.  Therefore, you are
+strongly encouraged to have back-up copies of everything you wish  to  save________
+on  your  hard disk before re-partitioning, no matter how confident you are
+that WUTIL ought to leave it alone.  But then, everyone  keeps  backups  of
+what they have on hard disk anyway, don't they?
+
+
+EFFECT OF RE-PARTITIONING ON AUTO-BOOT PARTITIONEFFECT OF RE-PARTITIONING ON AUTO-BOOT PARTITIONEFFECT OF RE-PARTITIONING ON AUTO-BOOT PARTITION
+
+One  of  the  partitions  on your disk can be designated as the disk's auto
+boot partition.  If you have a Rainbow 100B or 100+ and you choose the  "W"
+(boot  from  Winchester  disk) option from the start-up menu, the auto-boot
+partition is the one selected to boot  from.   The  next  section  of  this
+manual describes WUTIL's function for setting this auto-boot partition.
+
+But  what  happens to the partition which was previously auto-boot when you
+re-partition your  disk?   WUTIL  attempts  to  be  intelligent  and  leave
+auto-boot set as is when it makes sense to do so.
+
+WUTIL's  basic  logic  is that if the auto-boot partition is left unchanged
+after re-partitioning, it should continue to be  the  auto-boot  partition.
+The  process by which it makes this decision is somewhat flawed, but should
+work in the overwhelming majority of cases.
+
+Basically, two pieces of information are stored by any partitioning utility
+to tell the boot loader which partition is the  auto-boot  partition.   The
+two pieces of information are the boot partition's starting track number on
+the  disk  and  the  logical  drive  letter  (E:,  F:, etc.) that partition
+represents within its operating system.  After you rebuild your partitions,
+WUTIL looks at these values to  see  if  they  continue  to  "make  sense".
+Specifically,  WUTIL  checks  that  (a)  there  is a partition which starts
+exactly at the specified boot track; and (b) that partition's drive  letter
+matches  the one recorded as the boot partition's drive letter.  If both of
+these tests are passed, WUTIL leaves the auto-boot  partition  as  is.   If
+either  fails,  WUTIL  sets  your disk back to the "no auto-boot partition"
+mode and you have to use the "Set Auto-boot Partition" function  to  change
+it to what you want.
+
+The analytical reader will no doubt think of scores of cases which can fool
+this  logic into doing what may be the wrong thing.  Fair enough.  But more
+complex checking is probably not worth the bother, and this logic will work
+most of the time.  The rest of the time, one need only change the auto-boot
+partition.
+
+                                                                    Page 31
+WUTIL VERSION 3.2                     MAIN MENU: CHANGE AUTO-BOOT PARTITION
+
+
+CHANGE AUTO-BOOT PARTITION__________________________
+
+WUTIL provides a main menu  function  which  lets  you  set  the  auto-boot
+partition,  the  partition  from  which booting takes place if you elect to
+boot from your hard disk.
+
++-------------- RAINBOW 100 WINCHESTER DISK UTILITY Version 3.2 ---------------+
+|                           Boot Partition Selection                           |
+|                                                                              |
+|             Partition  Drive  Operating System                               |
+|                                                                              |
+|              (no auto boot)                                                  |
+|             MSDOS-1      E:   MS-DOS                                         |
+|             MSDOS-2      F:   MS-DOS                                         |
+|       --> * MSDOS-3      G:   MS-DOS                                         |
+|             CPM-1        E:   CP/M-86/80                                     |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|   Use arrows to select, then press DO to set; press MAIN SCREEN when done    |
++------------------------------------------------------------------------------+
+
+When you select the "Change Auto-boot Partition"  function  from  the  main
+menu,  you  get  a  screen  which  looks  like  the  one above.  All of the
+partitions on your disk are listed; the list includes the partition's name,
+and it's drive letter and operating system.  In addition  to  the  list  of
+partitions,  there  is  a line which says "no auto boot".  There will be an
+asterisk ("*") next to the line for the partition which is currently set as
+the auto-boot partition, or next to "no auto boot" if no such partition  is
+currently  set.   There  is also an indicator arrow ("-->") which indicates
+the current "selected" line.
+
+
+FUNCTION KEYS USED IN THIS SECTIONFUNCTION KEYS USED IN THIS SECTIONFUNCTION KEYS USED IN THIS SECTION
+
+There are only five  keys  available  in  this  function,  which  is  quite
+straightforward in use:
+
+UP ARROW,          Moves the indicator arrow up or down by one line.UP ARROW,UP ARROW,
+DOWN ARROWDOWN ARROWDOWN ARROW
+
+DO                 Changes  the  auto  boot partition  to be  the partitionDODO
+                   currently pointed to  by the indicator arrow, or sets no
+                   auto-boot partition if the arrow  is pointing to the "no
+                   auto boot" line.   The asterisk  indicating  the current
+                   selection is moved next to the arrow as confirmation.
+
+                                                                    Page 32
+WUTIL VERSION 3.2                     MAIN MENU: CHANGE AUTO-BOOT PARTITION
+
+
+MAIN SCREEN        Returns to the WUTIL main menu.MAIN SCREENMAIN SCREEN
+
+EXIT               Returns to MS-DOS command level.EXITEXIT
+
+Note  that WUTIL cannot tell if you have taken the appropriate steps within
+the boot partition's operating system to make the partition bootable.  This
+generally requires use of an LDCOPY program or the  FORMAT/S  option  under
+MS-DOS.  You will not actually be able to boot from the indicated partition
+until  these steps have been taken; you can take them before or after using
+WUTIL to set the boot partition -- it makes no difference.
+
+                                                                    Page 33
+WUTIL VERSION 3.2             MAIN MENU: COPY NEW BOOT LOADERS TO HARD DISK
+
+
+COPY NEW BOOT LOADERS TO HARD DISK__________________________________
+
+As described earlier, one of the functions performed by  WUTIL  during  the
+initialization  of  a  disk  is  the transfer of two "boot loader" files to
+special areas on the  disk.   These  boot  loaders  are  used  to  boot  an
+operating  system  from  the hard disk if you choose that option at startup
+time.
+
+If your disk has already been initialized, however, you may  wish  to  copy
+the  new loaders supplied with WUTIL onto your hard disk without disturbing
+the partitioning and formatting which you already did.  These  loaders  are
+improvements  over  those  supplied  by  DEC,  correcting  several bugs and
+deficiencies.
+
+Also, certain DEC utilities (specifically, the  LDCOPY  program)  overwrite
+the  secondary boot area with (again) older loader programs, so it helps to
+have a way to replace these loaders with the updated versions supplied with
+WUTIL.
+
+The main menu function "Copy New Boot Loaders to Hard Disk" does just this.
+It requires that the files PREBOOT.LDX and SECBOOT.LDX  be  available  (see
+the section on formatting and initializing for more information).  When you
+select the function from the main menu, the following screen is displayed:
+
++-------------- RAINBOW 100 WINCHESTER DISK UTILITY Version 3.2 ---------------+
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|      Copying boot loaders PREBOOT.LDX and SECBOOT.LDX to the hard disk       |
+|                                Please wait...                                |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
++------------------------------------------------------------------------------+
+
+The copying of the loaders takes only a few seconds.  When the operation is
+complete,  a  message to that effect is displayed; pressing any key at that
+point returns to the main menu.
+
+                                                                    Page 34
+WUTIL VERSION 3.2              MAIN MENU: PARK HARD DISK HEADS FOR SHIPPING
+
+
+PARK HARD DISK HEADS FOR SHIPPING_________________________________
+
+Most, but not all, hard disk drives include a "shipping zone" to which  the
+read/write  heads  can  be moved for additional protection during transpor-
+tation of the drive.  When such a zone exists, the drive  can  be  prepared
+for  shipping by commanding the drive to seek to a cylinder one higher than
+the highest cylinder actually available for use.
+
+When you select this option from the main  menu,  WUTIL  simply  tells  the
+controller  to  issue  the  appropriate commands to do this.  You must then
+turn your system off right away to preserve the protection afforded by this
+action.  If you attempt to do any further reads or writes, the  disk  heads
+are  moved  out  of  the shipping zone and back to active areas of the disk
+surface.
+
+Regardless of whether or not you know your drive to have a  shipping  zone,
+you  should  always do these things when you transport your hard disk drive
+or your computer with your hard disk drive inside it:
+
+(1) Use this WUTIL function.  It certainly can't hurt.
+(2) If you are transporting the whole computer, seriously consider removing
+    the hard disk drive from the system (it only takes about two minutes to
+    remove) and packing it separately.
+(3) Pack the hard disk  drive,  especially  if  it  is  removed  from  your
+    computer,  in a sturdy, shock-absorbing package.  You probably received
+    your hard disk in a box like this, usually a box  at  least  twice  the
+    size  of  the  drive  itself  and consisting largely of thick pieces of
+    shock-absorbing foam rubber.  Use it.
+
+You cannot be too careful with a Winchester disk drive.  It is  a  delicate
+and  expensive  piece of equipment, and the data you put on it is worth it,
+isn't it?
+
+                                                                    Page 35
+WUTIL VERSION 3.2          THE PRINT SCREEN FUNCTION AND CONFIGURATION MENU
+
+
+            ****************************************************
+            * THE PRINT SCREEN FUNCTION AND CONFIGURATION MENU *
+            ****************************************************
+
+WUTIL provides a PRINT SCREEN key which allows you to print the contents of
+what is displayed on the screen on your printer.  PRINT SCREEN also can  be
+configured to send its output to a file of your choice.
+
+In  addition to setting where the output of the PRINT SCREEN function goes,
+you can also decide whether each  screen  image  should  be  followed  by a
+formfeed  (page  eject)  or  not.  This is particularly useful when you are
+actually printing to your printer, where you might want each screen's  dump
+to appear on a separate page.
+
++-------------- RAINBOW 100 WINCHESTER DISK UTILITY Version 3.2 ---------------+
+|                                                                              |
+|               PRINT SCREEN output is being sent to SCREEN.TXT                |
+|            Formfeed will NOT be printed after PRINT SCREEN output            |
+|                                                                              |
+|                       PRINT SCREEN Configuration Menu                        |
+|                 +-----------------------------------------+                  |
+|                 | 1.  Send PRINT SCREEN output to printer |                  |
+|                 | 2.  Send PRINT SCREEN output to file    |                  |
+|                 | 3.  Toggle formfeed after print option  |                  |
+|                 | 4.  Return to Main Menu                 |                  |
+|                 +-----------------------------------------+                  |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|           Use the arrow keys or the number keys to select an item.           |
+|          Then press RETURN, DO, or ENTER to confirm your selection.          |
+|        (Or press MAIN SCREEN for main menu, EXIT to return to MS-DOS)        |
+|                                                                              |
++------------------------------------------------------------------------------+
+
+When  you request the PRINT SCREEN Configuration Menu from the main menu, a
+screen similar to what is shown above  is  displayed.   It  tells  you  the
+current  status  of  your PRINT SCREEN Configuration on the first two lines
+and provides a choice of things you can do in usual menu format.  You  make
+these choices in the normal way.
+
+If  you  select  the first option, WUTIL is configured so that PRINT SCREEN
+output is sent to your printer (attached to your printer  port).   This  is
+the initial mode.
+
+Selecting  the  second  option  displays  a prompt on the lower part of the
+screen which asks you to type in the name of the file you want PRINT SCREEN
+output sent to.  You can enter  any  standard  MS-DOS  file  specification,
+including  drive  designations  and  paths.   You  can even specify another
+special device (your COMM port, for instance), though this is probably  not
+usually useful.
+
+                                                                    Page 36
+WUTIL VERSION 3.2          THE PRINT SCREEN FUNCTION AND CONFIGURATION MENU
+
+
+The  third  option  switches  the  formfeed after print mode.  If WUTIL was
+configured to add a formfeed after PRINT SCREEN output, this mode is turned
+off.  If it was set to not add a formfeed, then this mode is turned on.
+
+Each time you make a selection, the  PRINT  SCREEN  Configuration  Menu  is
+redisplayed with the new current settings printed at the top of the screen.
+When  you have finished doing your configuration, you can press MAIN SCREEN
+or select item number 4 from the menu to return to the main menu.
+
+
+HOW PRINT SCREEN WORKS:  CHARACTER TRANSLATIONHOW PRINT SCREEN WORKS:  CHARACTER TRANSLATIONHOW PRINT SCREEN WORKS:  CHARACTER TRANSLATION
+
+When displaying things on the screen, WUTIL attempts to take full advantage
+of the rich character set available on the Rainbow.  This  is  particularly
+true  of the sector dump function.  When a copy of the screen is requested,
+either for your printer or for a file, certain compromises  must  be  made;
+the  characters appearing on the screen have to be translated in many cases
+to things which can be printed.
+
+WUTIL has two modes of translation, and it picks  one  depending  on  where
+your  PRINT  SCREEN output is going.  For lack of better terminology, we'll
+refer to them as "dumb printer mode" and "really dumb printer mode".
+
+Dumb printer mode is selected by WUTIL when you have the PRINT  SCREEN  key_________________
+configured  to  send  output to your printer and your printer port has been                                             ___
+defined in your firmware SET-UP to receive eight-bit  (rather  than  seven-
+bit)  data.   When  your  hardware is so configured, WUTIL assumes that the
+printer you have is a standard DEC printer such as  an  LA50,  LA100,  etc.
+These  printers  do  have  some  of  the  special Rainbow screen characters                           ____
+available in their repertoire, and WUTIL tries to display these  characters
+as  is.   Those  characters  which  cannot be displayed on DEC printers are
+replaced with a special "centered dot" character.
+
+Really dumb printer mode is selected by  WUTIL  when  you  have  the  PRINT________________________
+SCREEN  key  configured  to  send  output to a file, or in any case if your                                                     __
+printer port has been defined in SET-UP to receive  seven-bit  data.   When
+your  hardware  is  so  configured, WUTIL assumes it can only use standard,
+7-bit ASCII characters in its output.  All characters which are not in this
+set are displayed as periods.
+
+Since WUTIL likes to draw boxes around things, and since boxes  don't  look
+as good when built out of dots, centered or otherwise, WUTIL uses a special
+mode  of translation for the line-drawing characters making up the boxes it
+shows on the screen.  This occurs regardless of  the  mode  WUTIL  selects.
+When  copying any box corner (upper or lower, left or right) to the printer
+or a file, WUTIL replaces  it  with  a  "+"  (plus  sign)  character.   All
+horizontal  lines  are  replaced with "-" (hyphens), and all vertical lines
+are replaced with "|" (vertical bars, which are actually not the same thing
+as solid vertical lines on the Rainbow screen and on most  printers).   The
+end  result  is a reasonably acceptable rendition of boxes on all printers.
+This is, in fact, the way  all  boxes  appear  in  the  screen  "snapshots"
+provided throughout this manual.
+
+                                                                  Page A-1
+WUTIL VERSION 3.2                APPENDIX A:  NON-STANDARD HARD DISK DRIVES
+
+
+                      *********************************
+                      *          APPENDIX A           *
+                      *********************************
+                      * NON-STANDARD HARD DISK DRIVES *
+                      *********************************
+
+One  of  the  motivations for developing WUTIL was to allow you to put disk
+drives in your Rainbow which may have different sizes  or  geometries  than
+the "standard" ones supplied by DEC.
+
+When we refer to non-standard drives here, we are referring to drives which
+are  not geometrically equivalent to the standard Rainbow disk drives.  All
+standard drives supported for the Rainbow and sold by DEC are actually made
+by Seagate Technology, a major manufacturer of Winchester disk drives.  The
+DEC model numbers and their corresponding Seagate part numbers are shown in
+the table below:
+
+    Description            DEC Model Number   Seagate Model Number    ___________            ________________   ____________________
+
+    5 MB, full height           RD50               ST-506
+    10 MB, full height          RD51               ST-412
+    20 MB, half height          RD31               ST-225
+
+The Seagate models, as well as  models  made  by  other  manufacturers  but
+essentially  to  the  same specifications, should behave identically to the
+DEC models and thus are not considered "non-standard".
+
+However, suppose you want to put a 32 Megabyte or 67 Megabyte drive in your
+Rainbow?  Can you do it, now that you have WUTIL?  The answer is  probably,
+but you may have to play a few games to make it happen.
+
+A  number  of  people  have, for instance, successfully put 32 megabyte DEC
+RD52 (Quantum Q540) or 67 megabyte DEC RD53  (Micropolis  1325)  drives  in
+their Rainbows using WUTIL as a formatting and partitioning tool.  However,
+using  disks of this size creates some problems which WUTIL cannot entirely
+solve.
+
+
+BIGGER IS NOT ALWAYS BETTERBIGGER IS NOT ALWAYS BETTERBIGGER IS NOT ALWAYS BETTER
+
+One problem WUTIL encounters is the placement of control data on the  first
+two  tracks  of  the  large hard disks.  WUTIL is required to write several
+types of data onto the disk, as summarized below:
+
+THE PRE-BOOT BLOCK, always located in track 0, sector 1 (the  first  sector
+on  the  disk) contains a small program which loads a larger secondary boot
+program from the disk, which in turn loads  the  operating  system  loading
+code  from  the  auto-boot  partition.  The pre-boot program is supplied in
+the file PREBOOT.LDX and copied here during initialization.
+
+THE HOME BLOCK, always located in track 0, sector 2,  contains  information
+about  the disk's geometry and other physical parameters.  It also contains
+the location and sizes of all the other special blocks on the disk,  except
+for the pre-boot block and the home block itself, of course.
+
+                                                                  Page A-2
+WUTIL VERSION 3.2                APPENDIX A:  NON-STANDARD HARD DISK DRIVES
+
+
+THE  PARTITION  DATA  (DPD)  BLOCK  contains  a  description of the various
+partitions on your disk.
+
+THE OPERATING SYSTEM NAME  (OSN)  BLOCK  contains  the  names  of  all  the
+operating systems which may have partitions on your disk.
+
+THE BAD ADDRESS TABLE (BAT BLOCKS) contains a bit for each and every sector
+on your disk; the bit indicates whether the sector is good or bad.  The BAT
+occupies  several  blocks; you need one sector of BAT information for every
+250 tracks of space on your disk.
+
+THE ALTERNATE SECTOR TABLE (AST BLOCKS) contains information about how  bad
+sectors  on  your  disk  are  replaced with good sectors from the alternate
+sector area.  The AST usually occupies several blocks; it contains  entries
+for  each  of  the  alternate  sectors available on the disk.  You need one
+sector of AST information for every 100 alternate  sectors  on  your  disk;
+each alternate track, keep in mind, contains 16 alternate sectors.
+
+THE SECONDARY BOOT AREA contains the secondary boot program mentioned above
+(loaded  by  the  pre-boot program).  The current secondary boot program in
+the SECBOOT.LDX file distributed with WUTIL occupies 12 sectors.
+
+All of the control information  listed  above  (including  the  boot  code)
+normally resides in the first two tracks of the disk, with duplicate copies
+being stored in the third and fourth tracks.  Further, DEC stipulates that,
+in  the  case  of the structures which take more than one sector (BAT, AST,
+Secondary Boot), the entire sequence of blocks should fit within one  track
+of the disk.
+
+Both  of  these become difficult for very large disks.  The BAT area is the
+biggest problem.  If your disk has more than 4000 total  tracks  (cylinders
+times  surfaces),  the  BAT  occupies  17  or  more sectors.  Since a track
+contains only 16 sectors, it is impossible to write the entire  BAT  within
+one track!  The AST area can be a problem as well.
+
+Further, if the AST and/or BAT must be placed in track 1 because they won't
+fit  in  track  0  with the other structures, then the secondary boot code,
+which normally is placed at the beginning of track 1, may have to be  moved
+somewhere.   WUTIL  moves  it  to  track 4.  If the size of the BAT area is
+greater than 16 sectors, then WUTIL leaves the secondary boot code in track
+1 and moves the BAT area to tracks 4, 5, and however many more are needed.
+
+In general, there is code in WUTIL which attempts to find  good  places  to
+put  these  control  structures  for a given disk geometry.  This algorithm
+attempts to organize these structures so that they will match (or come very
+close to) their placement  by  the  DEC-supplied  formatter  for  all  DEC-
+supported  drives.   But  this  becomes  difficult  for  larger  disks.  In
+general, if you have a disk much bigger than 20MB (32MB is usually the next
+size up), WUTIL has to start breaking the rules.  And when it does, SOME of
+the standard DEC-supplied utilities start to get sick.
+
+For instance, the MS-DOS FORMAT command needs access to the BAT area on the
+disk in order to mark bad sectors in the File Allocation Table it builds in
+the partition (this is true prior to version 3.10 of  MS-DOS;  version 3.10
+and  higher avoids the issue by doing a sector-by-sector test of the entire
+partition during its processing).  Unfortunately, FORMAT expects the BAT to
+
+                                                                  Page A-3
+WUTIL VERSION 3.2                APPENDIX A:  NON-STANDARD HARD DISK DRIVES
+
+
+fit entirely within one track, and it gets lost when a very large BAT wraps
+around from the end of one track to the  beginning  of  another,  sometimes
+more  than  once.  Then it displays a noisy message about not being able to
+read the BAT and therefore it may not know where all the bad  sectors  are.
+If  you know for a fact that your disk has no bad sectors, or at least that
+there are none  in  that  partition,  you  may  consider  this  acceptable.
+However,  if  the partition you are trying to format does have bad sectors,
+you should avoid using  FORMAT.   WUTIL  does  format  your  partition,  so
+reformatting  should not be required.  If you absolutely must reformat in a
+situation like this, the best thing to do is do it  with  WUTIL.   Use  the
+repartition  option,  and  press  DO  immediately  upon  entry.  WUTIL will
+recognize that each partition  is  unchanged  and  will,  by  default,  not
+reinitialize  it.  When it gets to the one you want reformatted, tell it to
+initialize the partition anyway.
+
+
+OTHER PROBLEMS BEGIN TO "SURFACE"OTHER PROBLEMS BEGIN TO "SURFACE"OTHER PROBLEMS BEGIN TO "SURFACE"
+
+Other problems come about if your disk has eight surfaces, or any number of
+surfaces other than four.  This can happen with  very  large  disks,  which
+often have eight surfaces, or conceivably with smaller disks which may have
+one or two surfaces.
+
+Translating  a track number into its component cylinder and surface numbers
+requires   knowing   how  many  surfaces  your  disk  has.   Although  this
+information is stored in your disk's Home block, most DEC-supplied software
+seems to ignore it and always assume you have four surfaces (since all  the
+drives  they  support  do).   Fixing  this  may  require  that  you do some
+patching.
+
+As of version 2.0 of WUTIL, the number of places where patching is required
+has been greatly diminished.  As far as we know, there is  only  one  place
+where  a  patch  need be applied to correct the problems caused by assuming
+four surfaces on a drive.  This patch is necessary to permit  booting  from
+partitions on the hard disk.
+
+Booting  from  the  winchester  disk  consists of four distinct steps.  The
+first step involves Rainbow firmware (this is the part which only exists in
+the Rainbow 100B).  When the "W" (boot  from  Winchester  disk)  option  is
+chosen  from  the start-up menu, boot firmware code reads the primary (pre)
+boot block from the hard disk and executes it.  This software  proceeds  to
+load  and execute the secondary boot code (it finds it by looking for it in
+the location specified in the disk's home block).  The secondary boot  code
+determines which partition to boot from (it may display a hard disk startup
+menu if no auto-boot partition is specified).  Then it locates an operating
+system  boot loader in the first two tracks of the selected boot partition,
+loads that into memory, and executes it.   Finally,  the  operating  system
+boot loader loads the operating system itself and starts its execution.
+
+Each  of  the  four  steps  needs to access data on the hard disk, and thus
+needs to know the correct number of surfaces on the disk in order  to  find
+the  "next  piece"  in succession.  This is not a problem for the firmware,
+since it always reads from track 0.  The primary and secondary boot loaders
+supplied with WUTIL also correctly read the home  block  to  determine  the
+number  of  surfaces  and access what they need to read properly.  However,
+the operating system boot loaders provided with CP/M, CCP/M, and MS-DOS  do
+
+                                                                  Page A-4
+WUTIL VERSION 3.2                APPENDIX A:  NON-STANDARD HARD DISK DRIVES
+
+
+not  perform this calculation correctly, and can therefore fail to complete
+the boot process (the operating systems themselves, fortunately, DO use the
+correct number of surfaces, so only the boot loaders need to be fixed).
+
+In previous versions of the WUTIL manual, we provided  steps  for  manually
+patching  existing  boot loaders.  Fortunately, this is no longer required,
+due to the existence now of a fine public-domain disk  preparation  utility
+called  DSKPREP.   Its  author,  Herbert Hofmann, has produced an excellent
+package which will build proper operating  system  loaders  for  all  three
+Rainbow operating systems.  You are strongly encouraged to seek out DSKPREP
+(it  should  generally  be available anywhere where you find WUTIL) and use
+it.  It comes with complete documentation describing its features  (it  has
+many  others in addition to the one mentioned here) and is indispensable if
+you wish to use a drive with anything other than four heads.
+
+It is not necessary, to use DSKPREP on VENIX or MS-DOS V3.10 partitions.
+           
+DO YOU SCARE EASILY?DO YOU SCARE EASILY?DO YOU SCARE EASILY?
+
+With a little work, you should be able to solve all the problems  and  make
+your  big  or otherwise non-standard disks work.  But remember that nothing
+good comes for free, and you may have to work for  a  while  and  get  your
+fingernails  dirty.  This is not a task for the faint at heart, nor for the
+faint at hardware.  The existence of advanced tools like WUTIL and  DSKPREP
+make  the  whole  process  much  easier than it used to be, but it is still
+advisable to understand some of what is going on -- this is not the sort of
+upgrade you can reasonably expect to just "plug in and use".
+
+                                                                  Page B-1
+WUTIL VERSION 3.2                   APPENDIX B:  COMMON QUESTIONS & ANSWERS
+
+
+                       ******************************
+                       *         APPENDIX B         *
+                       ******************************
+                       * COMMON QUESTIONS & ANSWERS *
+                       ******************************
+
+Since  WUTIL's  first release,  I have received a number of questions  from
+users.   In the section which follows,  I have tried to include a represen-
+tation  of the more common questions and  their answers,  as best  as I can
+supply them.   Scan the list  below;  you may  find the answers  to  things
+you've been wondering about!
+ou've
+ou've
+
+---
+QUESTION:   I  JUST PICKED UP A SUPERMEGADISK MODEL 999-XXX AT A LOCAL SWAPQUESTION:   I  JUST PICKED UP A SUPERMEGADISK MODEL 999-XXX AT A LOCAL SWAPQUESTION:   I  JUST PICKED UP A SUPERMEGADISK MODEL 999-XXX AT A LOCAL SWAP
+MEET.  NOW THAT I HAVE WUTIL, CAN I FORMAT IT, PARTITION IT, AND USE IT?MEET.  NOW THAT I HAVE WUTIL, CAN I FORMAT IT, PARTITION IT, AND USE IT?MEET.  NOW THAT I HAVE WUTIL, CAN I FORMAT IT, PARTITION IT, AND USE IT?
+
+Well, that depends on a number  of  things.   First  and  foremost,  it  is
+important  that  you  have  specifications  for  the drive.  You must, at a
+minimum, know how many cylinders and surfaces the drive has.  Without  this
+information, the drive will be useless (to anyone!).
+
+The  next thing you must check is that the drive is electrically compatible
+with your Rainbow.  You are fortunate here, because  most  drives  probably
+will  be.   Virtually  all  5  1/4  inch  Winchester drives built today are
+compatible with the "Seagate ST506/ST412  Interface",  which  dictates  not
+only  the  number and shape of connectors, but what signals are assigned to
+what pins.  A reasonable rule of thumb is to look at the connectors and see
+if they look like the ones on the end of the cables  from  your  hard  disk
+controller  and  power  supply.   If  they  fit,  your  drive  is  probably
+compatible, though actual specs would be the best way to check  (and  avoid
+blowing up your controller board).
+
+Be sure you have sufficient power to handle the drive.  If your system is a
+Rainbow  100B,  or if you had a Rainbow 100A and bought a hard disk upgrade
+from DEC, you should have a fairly hefty power supply which can handle most
+hard disks which  can  be  installed  inside  the  Rainbow  cabinet.   Most
+internal  drives  made today actually draw less power than the 10MB Seagate
+ST412 (DEC RD51)  drive.   Really  big  disks,  however,  may  need  to  be
+installed externally with a separate power supply.
+
+One  final  thing  to check on.  The capacity of your drive may not be what
+you think it is.  Some drives  are  advertised  using  their  "unformatted"
+capacity,  which is usually at least 20% larger than their actual formatted
+capacity.  Even when a formatted drive capacity is advertised, you have  to
+be  careful.   The  rainbow will store only 16 sectors on each track of the
+hard disk.  Many drive capacities are measured  using  an  IBM-standard  17
+sectors  per  track.   Some  even  achieve  high  capacities  by permitting
+recording 25 or more sectors per track.  This is all well and good, but the
+Rainbow, because of some fairly specific code in its operating systems,  is
+limited  to  16 sectors per track, period.  There is nothing preventing you
+from using a drive which is specified at 25 sectors per track,  but  you'll
+only  be  able  to  use 16 of those 25 sectors.  So to determine the actual                                                                     ______
+drive capacity you will get on your Rainbow, use this formula:
+   Capacity = (Number of Cylinders) x (Number of Heads) x 8K bytes
+
+And remember that 1 MB is 1024K bytes, not 1000K bytes.
+
+                                                                  Page B-2
+WUTIL VERSION 3.2                   APPENDIX B:  COMMON QUESTIONS & ANSWERS
+
+
+
+
+---
+QUESTION:  I INSTALLED A DRIVE, AND IT SEEMS TO WORK SOMETIMES,  BUT  OTHERQUESTION:  I INSTALLED A DRIVE, AND IT SEEMS TO WORK SOMETIMES,  BUT  OTHERQUESTION:  I INSTALLED A DRIVE, AND IT SEEMS TO WORK SOMETIMES,  BUT  OTHER
+TIMES  IT  GETS  LOTS  OF  FUNNY  WRITE ERRORS AND SEEK ERRORS.  AM I DOINGTIMES  IT  GETS  LOTS  OF  FUNNY  WRITE ERRORS AND SEEK ERRORS.  AM I DOINGTIMES  IT  GETS  LOTS  OF  FUNNY  WRITE ERRORS AND SEEK ERRORS.  AM I DOING
+SOMETHING WRONG?SOMETHING WRONG?SOMETHING WRONG?
+
+Maybe.  Here are a few things to check:
+
+(1) Make sure you specified the correct number of cylinders and heads  when
+you  initialized  your  disk.  You might also try a slower step rate if the
+only problems you have are seek errors.
+
+(2) Virtually all drives come with jumpers or switches of some  kind  which
+are  used  to  configure  the drive.  Sometimes, these drives come from the
+factory (or wherever) with these jumpers/switches set the  wrong  way.   In
+general,  you  want to set the jumper for "Drive Select 1" (may be labelled
+"DS 1" or even just "1" on your drive) -- AND NOTHING ELSE.   If  you  have
+extra  jumpers  installed or extra switches turned on, you probably want to
+remove the jumpers or turn off the extra switches.  Drive Select  1  should
+be the only option you select.
+
+(3)  The  mounting hardware for the hard drive in your Rainbow was designed
+primarily for RD50 and RD51 (Seagate  ST506  and  ST412)  drives.   If  you
+compare  these  drives  with  most  others,  you  may notice that the drive
+electronics of other drives are a great deal closer to the  bottom  of  the
+drive.   When  mounted  on the sliding "plate" used to install the drive in
+the Rainbow cabinet, these electronics (sometimes the "foil"  side  of  the
+circuit  board)  often  sit  dangerously  close  to  the  sheet metal piece
+attached to this plastic mounting plate.  This can short out  part  of  the
+drive's  electronics and cause "flaky" behavior.  If you have such a drive,
+it's a good idea to remove the metal piece from this mounting plate (it  is
+attached by a single small screw).
+
+(4) Be sure that the connectors on the end of the cable from the controller
+are  completely  and  firmly  installed  on the drive's PC edge connectors.
+Some drives do not fit well in the Rainbow cabinet and the  connectors  can
+be forced into positions which result in improper contact.
+
+
+---
+QUESTION:   I HAVE A RAINBOW 100A AND WOULD LIKE TO BOOT FROM MY HARD DISK.QUESTION:   I HAVE A RAINBOW 100A AND WOULD LIKE TO BOOT FROM MY HARD DISK.QUESTION:   I HAVE A RAINBOW 100A AND WOULD LIKE TO BOOT FROM MY HARD DISK.
+IS THERE ANY WAY I CAN DO THIS?IS THERE ANY WAY I CAN DO THIS?IS THERE ANY WAY I CAN DO THIS?
+
+You can come very close.  Obtain a copy of the DSKPREP program mentioned in
+appendix A.  One of the functions this program provides is the  ability  to
+create  a  bootable  floppy disk which simulates the firmware's part of the
+"boot from W" option available on the 100B start-up screen.  You can create
+one of these floppy disks, then just leave it, say, in drive B.   When  you
+want  to  boot  from  your hard disk, you boot from drive B instead -- this
+loads the special code from the floppy, which in turn starts the hard  disk
+boot  procedure  as  if you had the "W" option on your menu.  And it's more
+than reasonably fast.
+
+                                                                  Page B-3
+WUTIL VERSION 3.2                   APPENDIX B:  COMMON QUESTIONS & ANSWERS
+
+
+---
+QUESTION:  WHY ARE PARTITIONS LIMITED TO 8 MEGABYTES?QUESTION:  WHY ARE PARTITIONS LIMITED TO 8 MEGABYTES?QUESTION:  WHY ARE PARTITIONS LIMITED TO 8 MEGABYTES?
+
+This is not a limitation of WUTIL -- it is a limitation  of  the  operating
+systems  and  their  disk  allocation  schemes.  WUTIL simply enforces this
+limit.   The  limit  exists  for  CP/M  and  CCP/M  and,  for  a  different
+reason, in MS-DOS prior to version 3.10.  V 3.10 (and later) of MS-DOS rai-
+ses this limit (for MS-DOS partitions only) to just under 32  megabytes.
+
+
+---
+QUESTION:  IS WUTIL COMPATIBLE WITH OTHER DISK FORMATTING AND  PARTITIONINGQUESTION:  IS WUTIL COMPATIBLE WITH OTHER DISK FORMATTING AND  PARTITIONINGQUESTION:  IS WUTIL COMPATIBLE WITH OTHER DISK FORMATTING AND  PARTITIONING
+UTILITIES?UTILITIES?UTILITIES?
+
+Generally,  the answer should be yes.  Some older versions had difficulties
+in this area, owing mostly to (honest) deficiencies in the other utilities,
+which were either writing things incorrectly so that WUTIL could  not  read
+them  or  which  expected  certain  things to be written in specific places
+where WUTIL did not (and did not have to) write them.  WUTIL has been  made
+more  lenient  of late, and it now attempts to place key disk structures in
+the fixed places some of these utilities expect them in order to  cooperate
+better with other utilities.   One  disk utility  known  to be incompatible
+with WUTIL is FDISK, the partitioning utility supplied with MS-DOS V3.10.
+
+
+---
+QUESTION:  WHEN I PARTITION MY 67MB DRIVE WITH WUTIL, IT ONLY SEEMS TO GIVEQUESTION:  WHEN I PARTITION MY 67MB DRIVE WITH WUTIL, IT ONLY SEEMS TO GIVEQUESTION:  WHEN I PARTITION MY 67MB DRIVE WITH WUTIL, IT ONLY SEEMS TO GIVE
+ME  ABOUT  64MB  OF SPACE, YET MY BRAND X PARTITIONING PROGRAM GIVES ME THEME  ABOUT  64MB  OF SPACE, YET MY BRAND X PARTITIONING PROGRAM GIVES ME THEME  ABOUT  64MB  OF SPACE, YET MY BRAND X PARTITIONING PROGRAM GIVES ME THE
+FULL 67MB.  WHAT GIVES?FULL 67MB.  WHAT GIVES?FULL 67MB.  WHAT GIVES?
+
+Brand X is lying to you.  WUTIL uses the industry-accepted "correct"  value
+of  1 megabyte in all its measurements -- the value is two to the twentieth
+power, or 1K times 1K, or, to be precise, 1,048,576 bytes  (given  that  1K
+bytes  is  1,024  bytes).  Some other utilities (sadly, including some from
+DEC)   use   incorrect   values   like  1,024,000  or  1,000,000  in  their
+measurements.  Some even use a different value for 1MB depending  on  which
+drive  you  have,  so  that  they  can  force  the results to add up to the
+commonly advertised capacity of the drive.  Would I lie about a thing  like
+that?  No.
+
+
+---
+QUESTION:   IN  MY DRIVE LITERATURE, IT SAYS I CAN DAISY-CHAIN SEVERAL HARDQUESTION:   IN  MY DRIVE LITERATURE, IT SAYS I CAN DAISY-CHAIN SEVERAL HARDQUESTION:   IN  MY DRIVE LITERATURE, IT SAYS I CAN DAISY-CHAIN SEVERAL HARD
+DISK DRIVES TOGETHER FOR INCREASED STORAGE.  CAN I?DISK DRIVES TOGETHER FOR INCREASED STORAGE.  CAN I?DISK DRIVES TOGETHER FOR INCREASED STORAGE.  CAN I?
+
+Not with the DEC controller board.  Although  this  is  supported  by  hard
+disks  and  by  the  controller  chip  which  makes  up  the heart of DEC's
+controller, the necessary support electronics to  make  this  feature  work
+have  been omitted  from  the board.  However, you can daisy-chain two hard
+disk drives together, if you replace your DEC controller board with a Micro
+CHS dual winchester controller board.
+
+
+---
+QUESTION:  DOES WUTIL  LET  ME  CHANGE  THE  DIRECTORY  SIZE  FOR  A  CCP/MQUESTION:  DOES WUTIL  LET  ME  CHANGE  THE  DIRECTORY  SIZE  FOR  A  CCP/MQUESTION:  DOES WUTIL  LET  ME  CHANGE  THE  DIRECTORY  SIZE  FOR  A  CCP/M
+PARTITION?PARTITION?PARTITION?
+
+Sorry,  no.  Maybe in the next version.  It's still probably better support
+for CCP/M than you get from DEC or Digital Research.
+
+
+WUTIL VERSION 3.2
+
+
+                              ACKNOWLEDGEMENTS                              ________________
+
+WUTIL  was  no  small undertaking, and as much as I'd like to take complete
+and total credit for making this project work, I had a great deal  of  help
+from  others.   Various people have helped along the way, and it would be a
+tremendous injustice if I neglected to mention some of them.
+
+Throughout the development  of  the  first  versions  of  this  software, I
+received  frequent  help,  suggestions, and information from members of the
+CompuServe DEC PC Forum.  Every  member  of  that  group  helped  get  this
+project  off  the  ground,  if for no other reason, because they all put up
+with constant messages about WUTIL and its predecessor,  PRPART,  on  their
+board.   I  also  uploaded  a  fair number of "beta test versions" there in
+WUTIL's early days, keeping the Sysops, Stu Fuller and  Bill  Leeman,  busy
+moving them around.
+
+Martin Ferguson and Hank Suzukawa helped me test the "final final beta test
+version"  of  WUTIL extensively and under a variety of conditions.  Between
+them, I was able to work out most of the bugs prior to the release of WUTIL
+version 1.0.  Both of these guys sat through more than a couple backups and
+restores in the name of helping me get WUTIL running.  Despite  this,  they
+both offerred continual assistance and pages of detailed test reports.
+
+Chris Walther helped a great deal with some basic research during the early
+stages  of  WUTIL's  development.   He  saved me more than a little time by
+tracking down the way certain things worked and didn't work.
+
+Stu Fuller and Tom Kemnitz provided additional and timely testing  support.
+Dan Kinoy and Ted Needleman both offered specific assistance which I turned
+down,  having  already  made  other arrangements, but the offer of help was
+certainly appreciated.
+
+Bernie Eiben, the guy who runs the MARKET  "board",  probably  the  largest
+source  of free Rainbow (and other) software (in addition to holding down a
+full time "real" job at DEC), provided invaluable assistance in working the
+bugs out of WUTIL, and acted as a conduit of information between  me  and a
+large  group  of  Rainbow users, many of whom work inside DEC and know more
+about the Rainbow than some of us outsiders will ever  know.   He  provided
+many useful suggestions and has been a big WUTIL "booster".
+
+Mark  Bornstein,  in addition to providing regular ego-boosting pats on the
+back, has loaned me hardware on a couple of occasions which helped  me  get
+WUTIL working reliably on really big disks.
+
+And,  of  course, there are probably others who I forgot.  If you're one of
+them, please accept my apologies.  My  brain  has  always  had  a  few  bad
+sectors.
+
+                                                               - Tony Camas
+                                                     Bedford, Massachusetts
+                                                         September 11, 1986
+

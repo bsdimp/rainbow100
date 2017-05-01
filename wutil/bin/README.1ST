@@ -1,0 +1,274 @@
+WUTIL Release Notes for Version 3.2 -- August 15, 1989
+WUTIL V3.2 is distributed with permission from Anthony G. Camas
+
+Copyright 1986 Anthony G. Camas
+Copyright 1989 Vinzenz Esser
+All Rights Reserved
+
+
+The author of V3 of WUTIL can be reached at this address:    
+                        Vinzenz Esser
+                        Waldstrasse 2E
+                        D-8052 Moosburg 2
+                        West-Germany
+
+
+Contents of this archive (Files marked with * have changed from the previous
+version V3.12):
+
+  *WUTIL.COM       is the main WUTIL program
+  *WUTIL.000       is the overlay file for WUTIL
+  *WUTIL.MAN       is the manual for WUTIL
+   WUTILDSK.DAT    is the file containing disk descriptions
+   PREBOOT.LDX     is the hard disk primary (pre) boot loader
+   SECBOOT.LDX     is the hard disk secondary boot loader
+  *README.1ST      contains release notes and instructions (this file)
+
+
+
+
+You are STRONGLY encouraged to extract, print,  and read (or at least scan)
+the manual first.   Yes,  it's well  over 40 pages long,  but  those  pages
+contain much useful information.   You must at least  read the installation
+section to understand how to put the files on your disk  so that WUTIL will
+run correctly.
+
+Also,  if  you have previously used  an older version of WUTIL,  you should
+read the summary  of changes  appearing at the end of this file to see what
+has changed between the version you have been using and this new version.
+
+SPECIAL NOTES:
+
+WUTIL  is not entirely compatible  with the DISKPART package offered by CHS
+Corp.  DISKPART does not appear to properly format one of the control areas
+on  the  disk  (the AST area).   This  causes  a warning message  in WUTIL.
+DISKPART,  however,  does seem  to behave  with disks formatted/partitioned
+with WUTIL.
+
+If you have a hard disk >20MB and it is initialized with WUTIL, then FDISK,
+the hard disk partitioning utility supplied with MS-DOS V3.10 will not run.
+That's because FDISK seems to expect the BAT sectors in track 0 of the hard
+disk ignoring the fact that there is not enough room in track 0 for all the
+BAT sectors required on a hard disk >20MB.   WUTIL however knows that there
+is not  enough room in track 0  and therefore moves  all the necessary  BAT
+sectors to a more suitable location (mostly track 4).   The fact that FDISK
+doesn't run isn't considered a problem,  since you can  always use WUTIL to
+partition your hard disk.  There is no need for FDISK.
+
+People  trying to format  very large disks (bigger than 20MB) or disks with
+non-standard  geometries (other than four surfaces)  are  advised  to  read
+Appendix A  of the WUTIL manual  for special information important to them.
+Certainly,  if you are contemplating  buying such a unit and you are confi-
+dent  that WUTIL  will enable you  to do so,  you should read  this section
+first and understand some of what you're up against.   While this is not as
+much of a problem now  as it has been  with previous version of WUTIL,  you
+should still exercise some caution.
+
+To determine if your Rainbow contains one or two hard disks  WUTIL searches
+for the CHS driver  in the Rainbow's memory.  If the driver  is found  then
+WUTIL is able to access the second drive.  The driver must be loaded from a
+line 'DEVICE=<driver-name>' in your CONFIG.SYS file at boot time.    Please
+note that due to the design  of the CHS driver  it will NOT stay in memory,
+if the second hard disk  does not contain  at least one MS-DOS partition at
+boot time.   In that case WUTIL  will not be able  to access drive 2,  even
+though it's physically connected to the Rainbow.
+
+
+FIXES AND ENHANCEMENTS FROM VERSION 3.12 TO VERSION 3.2:
+
+WUTIL now is, again, compatible with the latest revision B of MS-DOS V3.10.
+Since the BIOS was moved up from segment 40 to segment 70 in MS-DOS V3.10b,
+WUTIL wasn't able to find the device driver's anymore.   Now, this has been
+fixed.
+
+Added VENIX/Rainbow to WUTIL's list of operating systems.  WUTIL is able to
+create VENIX partitions now.
+
+
+FIXES AND ENHANCEMENTS FROM VERSION 3.11 TO VERSION 3.12:
+
+The hard disk partition menu now accepts the RETURN key  in addition to the
+DO and keypad ENTER keys  as the termination key  after selecting  the boot
+partition.   To take advantage  of this new feature on an already partitio-
+ned winchester, copy the new SECBOOT.LDX to the hard disk by selecting main
+menu option 6 'Copy new boot loaders onto hard disk'.
+
+A bug was fixed which caused version 3.11 to not start on a Rainbow A under
+certain circumstances.
+
+
+
+FIXES AND ENHANCEMENTS FROM VERSION 3.1 TO VERSION 3.11:
+
+A bug was fixed which caused  version 3.1  to hang,  when run  under MS-DOS
+version 2.11.
+
+
+
+FIXES AND ENHANCEMENTS FROM VERSION 3.0 TO VERSION 3.1:
+
+This version now supports  a second hard disk  connected to the Rainbow via
+the Micro CHS dual winchester controller.
+
+When repartitioning  a hard disk  containing  partitions with  an operating
+system unknown to WUTIL (VENIX in this case) and this partition is supposed
+to be left unchanged WUTIL  now correctly  writes the partition's name into
+the new DPD block instead of replacing the name with a null string.
+
+The number of FAT sectors of an MS-DOS partition now  will be written  into
+the appropriate location in the DPD block.
+
+
+FIXES AND ENHANCEMENTS FROM VERSION 2.0 TO VERSION 3.0:
+
+The major enhancement is  that WUTIL  now is compatible  with the final re-
+lease of MS-DOS version 3.10.   Please note  that due  to some internals of
+MS-DOS version 3.10 partition sizes of 1025, 1026, and 1027 tracks will not
+work.   Therefore  WUTIL will not allow partitions  with these sizes  to be
+created.
+
+In the partition editor  the sequence  of operating systems  the SELECT key
+cycles through has been changed.   The first operating system after --GAP--
+is MS-DOS now, the next one is CP/M, instead of vice versa.    This way, if
+the partition to be added contains more than 1024 tracks,  it won't be  de-
+creased to 1024 tracks  when cycyling from --GAP-- to MS-DOS via CP/M.  And
+then mostly MS-DOS partitions are created nowadays anyways.
+
+RD32/ST251 (40MB) support has been added to the WUTILDSK.DAT file.
+
+A very common reason  for getting the error message  'CAN'T FIND WINCHESTER
+INTERRUPT SERVICE IN MS-DOS'  when starting WUTIL is,  having a TSR program
+installed which took over the winchester interrupt vector. To make the user
+aware of that a message to that behalf has been added to the error display.
+
+In various places it is no longer possible to enter values beyond the Rain-
+bow's or the installed hard disk's limits:   When entering data about a new
+hard disk  the number of cylinders  can not exceed 1024  and  the number of
+heads can not exceed 8, which is a total of 67MB.   These limits are set by
+the design of the Rainbow's  hard disk controller.  In  the Dump Sector op-
+tion it is no longer possible to increment the track number beyond the last
+track of your hard disk.  The last track of your hard disk is considered to
+be the last logical track before the manufacturing cylinder.
+
+A bug in the Print Screen routine has been fixed.  This bug caused the last
+three lines  of the screen  to not be dumped  if the Rainbow was running on
+50 Hz.
+
+A column displaying total number of tracks per partition  has been added to
+the display of the current hard disk status.
+
+In the partitioning editor the partition size  now can be increased/decrea-
+sed in 100 track increments by pressing the right/left arrow keys  together
+with the Ctrl key.  In the 'Dump Sector' option the track number can be in-
+cremented/decremented  in 100 track increments now  by pressing  the right/
+left arrow keys together with both the Shift and Ctrl keys.
+
+
+FIXES AND ENHANCEMENTS FROM VERSION 1.1 TO VERSION 2.0:
+
+The maximum number  of tracks that WUTIL  can handle on a disk has been in-
+creased from 5000 to 15000, making the capacity of WUTIL now something like
+117MB, a limit which should bother hardly anyone.  It can be easily changed
+through a parameter in the source code if it's still too low for you.
+
+Minor  changes  were made so WUTIL  will work under MS-DOS version 3.x (for
+those who have it).
+
+Also for those  with access to version 3  of MS-DOS,  WUTIL will now permit
+MS-DOS partitions to be as big as almost 32MB.   This only works if you are
+running under version 3, otherwise, the limits remain the same.   The maxi-
+mum and minimum size checking in the partition editor was also revamped and
+a few little bugs have been fixed.
+
+The "partition information" display screen no longer has the "init" column,
+since all partitions were (are) always initialized anyway.
+
+Custom-made (and better working)  PREBOOT.LDX and SECBOOT.LDX files are now
+provided with WUTIL.   Consequently,  the code  designed to patch  the DEC-
+supplied loaders during installation has been removed.
+
+WUTIL was not correctly indicating that there was no auto-boot partition in
+the HOM block.   The result was that a "non system diskette" message  would
+occur rather than the appearance of the boot menu.  This has been fixed.  A
+disk  can be corrected  by simply bringing up  the "set auto-boot" function
+and  pressing DO again  with the arrow  still  pointing at  "no auto boot".
+This procedure  is not necessary in cases where there WAS an auto boot par-
+tition, only where there was not.
+
+When  we added code  in version 1.1  to bypass  formatting  of manufacturer
+tracks if they are readable,  we meant well, but it didn't work.   If there
+IS manufacturer data in these tracks, it is written using 256-byte sectors;
+therefore reads would fail and the tracks would be formatted anyway.  A fu-
+ture version  will read  these correctly,  but for now, we will always skip
+formatting  these tracks  so as to avoid  destroying  any data which may be
+there.
+
+In partitioning, logical units are now assigned to CP/M and CCP/M as a unit
+(CP/M first, then CCP/M) and the total number of partitions allowed is four
+total  for the two operating systems.   This is  because CCP/M  evidentally
+also accesses CP/M partitions, which we didn't know.
+
+The manual  has seen some revisions  and the addition of a new "Questions &
+Answers" section in appendix B.
+
+
+FIXES AND ENHANCEMENTS FROM VERSION 1.0 TO VERSION 1.1:
+
+A nasty typo  caused WUTIL  to misjudge  the number of sectors it needed to
+write alternate sector information (AST blocks) onto the disk.   This could
+cause several kinds of "flaky" behavior.  The problem has been corrected.
+
+The algorithm which WUTIL uses  to place control blocks on the beginning of
+the disk has been changed so that WUTIL puts the blocks in locations closer
+to those  where the DEC winchester utility  puts them.   Evidentally,  many 
+utilities,  including (sadly) parts of MS-DOS and CP/M provided by Digital,
+assume that certain data is in particular locations on the disk rather than
+reading  the  HOM  block  to  find  where  the data  is.   A  new  copy  of
+WUTILDSK.DAT is also provided with this release which includes disk defini-
+tions with these new block placements.
+
+Some manufacturers  of hard disk drives  (all those provided to DEC)  write
+"manufacturer data" to tracks in the last cylinder of the disk.  WUTIL used
+to write over this stuff, which some people would like to keep.  Now, WUTIL
+will,  when formatting drives,  try to read the first sector in each of the
+tracks  in the manufacturing cylinder.   If these reads  succeed,  then the
+formatting and overwriting of these tracks is bypassed.  Thus, WUTIL should
+now leave manufacturing data alone if it is there,  but format this area if
+it is not.
+
+
+FIXES AND ENHANCEMENTS FROM VERSION BETA-0.9 TO VERSION 1.0:
+
+WUTIL now  comes up properly on Rainbow 100A's.   We  were  counting  on  a
+feature of Turbo Pascal which didn't exist.  Now we don't.
+
+The format  and  initialize function  now  gives you four options as to how
+"reliably" (slowly, also) you want it to work.  You can select double-veri-
+fy, single-verify, format only (no verify), or initialize-only modes.
+
+The  MAIN SCREEN  key  now works  in the  "enter you own  disk information"
+screen of the formatting function.
+
+You  can now use the sector dump function  even if your disk is not initia-
+lized with the required data structures.  If your disk does not have a HOME
+block, then it must have 4 surfaces, however.
+
+If the AST or BAT areas of the disk are not readable by WUTIL,  it now con-
+siders this a non-fatal error and tries to continue processing after a war-
+ning message.   This was done to try and make WUTIL work with disks format-
+ted with the CHS formatter.
+
+Also for CHS compatibility, WUTIL now sorts the list of partitions by star-
+ting track number on input.   CHS does not always  write them onto the disk
+that way,  which confused the WUTIL partition editor  into  thinking  there
+were gaps on the disk that weren't.
+
+A few other internal changes for CHS compatibility were also made.
+
+For disks with 8 surfaces,  WUTIL now tries to apply patches to PREBOOT and
+SECBOOT  loaders  while writing them  onto the disk during  initialization.
+Previous versions required manual patching with DEBUG.
+
+[end of README.1ST for WUTIL version 3.0]
+--VE--
+
