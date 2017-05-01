@@ -1,0 +1,8 @@
+This collection of files comes from 4 disks labeled DECWNIDOWS 1.03
+that came to be in a big box of floppies years ago.
+
+At present it isn't know if these are any good, but the crc of the
+files in them differ from what's otherwise available.
+
+These were accomanied by a letter from 1988 that said these could be
+uploaded to a BBS.
