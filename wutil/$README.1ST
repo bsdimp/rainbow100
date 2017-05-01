@@ -1,0 +1,134 @@
+WUTIL source code distribution package version 3.2 -- August 15, 1989
+WUTIL V3.2 is distributed with permission from Anthony G. Camas
+
+Copyright 1986 Anthony G. Camas
+Copyright 1989 Vinzenz Esser
+All rights reserved
+
+The author of V3 of WUTIL can be reached at this address:
+                        Vinzenz Esser
+                        Waldstrasse 2E
+                        D-8052 Moosburg 2
+                        West-Germany
+
+
+
+SOURCE FILES CONTAINED IN THIS DISTRIBUTION
+-------------------------------------------
+
+This distribution kit contains the source modules for WUTIL itself, as well
+as the source code and  batch files necessary to build  the PREBOOT.LDX and
+SECBOOT.LDX loaders.   The following list  shows all the files contained in
+the archive and which part of the system  they belong to:
+
+        FILE            CONTAINS
+
+        README.1ST      Source kit instructions; what you are reading now.
+
+        BLDPBOOT.BAT,   These files are used to build the primary boot loa-
+        BLDPBOOT.DEB    der "PREBOOT.LDX" from the source code provided.
+
+        PREBOOT.ASM     Source code for primary boot loader.
+
+        BLDSBOOT.BAT,   These files  are used to build  the secondary  boot
+        BLDSBOOT.DEB    loader "SECBOOT.LDX" from the source code provided.
+
+        SECBOOT.ASM     Source code for secondary boot loader.
+
+        *.PAS           These are the source modules  for the WUTIL program
+                        itself (see next section).
+
+        WUTILDSK.DAT    This file,  containing  definitions  of common disk
+                        formats  used  by the format & initialize function,
+                        is provided in this archive as well as the standard
+                        distribution  archive  in  order to make the source
+                        archive self-sufficient (though it does not contain
+                        a manual).
+
+HOW TO BUILD THE WUTIL PROGRAM
+------------------------------
+
+WUTIL is made up of several source modules.  It was written in Turbo Pascal
+(which, to be fair,  I should tell you is a Trademark of Borland Internati-
+onal, Inc.) version 3.0.   It uses a number of  Turbo-specific features, so
+adapting it for compilation under most other Pascal compilers  is likely to
+be quite difficult.
+
+I have tried to include profuse and  verbose comments throughout the source
+code and to avoid doing "cute" things which are less than obvious.  This is
+not, however, always possible.
+
+If  you know Turbo,  you know  that it is not really  a modular compiler in
+that you cannot  compile modules  separately  and link them together later.
+Instead,  Turbo uses a source-level INCLUDE  feature to bring modules toge-
+ther at compilation time and  builds an executable .COM file directly.   In
+the case of WUTIL,  it also builds an overlay file,  WUTIL.000.  Since each
+source module  must be able  to fit in memory,  each is limited to a little
+less than 64K in size.  Some of them are quite close, and if you start add-
+ing things, you may find it necessary to divide things further.
+
+The current organization of WUTIL source modules is as follows:
+
+WUTIL.PAS       This is the MAIN source program,  the one that includes all
+                the others in one way or another. It includes the uppermost
+                driving procedures  in WUTIL's organizational hierarchy and
+                the main procedure for WUTIL  (which is actually only about
+                a page long).
+
+WUREVS.PAS      This file contains  the revision history.   It is virtually
+                entirely composed  of comment text,  with  the exception of
+                one CONST definition  appearing  at the top,  which defines
+                the version number.
+
+WUDATA.PAS      This file contains  global CONST, TYPE, and VAR definitions
+                used by all of WUTIL.
+
+WUSUBL.PAS and  These files contain utility subroutines used by WUTIL.  The
+WUSUBH.PAS      idea is  that WUSUBL contains  "low level"  subroutines and
+                WUSUBH contains "high level" subroutines. Basically, WUSUBL
+                contains routines  called  by WUSUBH  (and sometimes by the
+                rest of WUTIL),  so they tend to be  "lower level" in their
+                hierarchy.   The point at which these two modules are divi-
+                ded is actually relatively arbitrary.   Historically, there
+                used  to be just one  WUSUBS.PAS,  but I had to split it in
+                two because it got too big.
+
+WUOVR.PAS       This  contains  the overlay procedures for all of the func-
+                tions of WUTIL except  the Print Screen configuration func-
+                tion (which is not an overlay procedure) and the repartiti-
+                oning function  (which is big enough to reside in a file of
+                its own). 
+
+WUPART.PAS      This contains  the overlay procedure for the repartitioning
+                function.
+
+Compiling WUTIL  is actually quite easy.   Run Turbo Pascal  and use  the M
+command  to specify  WUTIL.PAS  as the Main source file.   Use the compiler
+Options submenu in Turbo to set compilation directly to a .COM file.   Then
+use the C command to start the compilation. Turbo will bring in the various
+included  modules  as required and compile the entire package,  which takes
+about two and a half minutes.  Then Quit from turbo and run WUTIL.
+
+HOW TO BUILD BOOT LOADERS
+-------------------------
+
+An automated procedure has been built for building the primary and seconda-
+ry boot loaders  (PREBOOT.LDX and SECBOOT.LDX).   In addition  to the files
+provided,  you will need a copy of any bootable floppy disk  containing the
+version of MS-DOS that you run  (or a newer version will usually work too).
+This  is  required  because  the secondary boot loader  contains  some  Z80
+support code which is on all bootable floppies.
+
+Place  all the files  (BLD*.* and *.ASM)  in one directory on a drive OTHER
+than drive A (faster if you use a hard disk partition, of course). Then, to
+build  PREBOOT.LDX,  simply  type  BLDPBOOT,  or  type  BLDSBOOT  to  build
+SECBOOT.LDX. Note that the MASM and DEBUG programs must be available in the
+current directory or on your PATH so that they can be executed in the buil-
+ding process.
+
+If you are building SECBOOT,  you will be asked to insert a bootable floppy
+into drive A at an appropriate time.   You may remove the floppy  after the
+procedure has finished.
+
+[end]
+
