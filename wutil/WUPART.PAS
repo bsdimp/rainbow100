@@ -54,7 +54,7 @@ Var
     gap), given the operating system code }
   begin
     if OS = -1 then MinSize := 1
-      else if OS = 7 then MinSize := 22
+      else if OS = VENIXIndex then MinSize := 22
       else MinSize := 128;
   end {MinSize};
 
@@ -224,7 +224,7 @@ begin {RepartitionDisk}
   LastOS := I - 1;
 *******************************************************************************}
   { Make VENIX the last OS instead }
-  LastOS := 7;
+  LastOS := VENIXIndex;
 
   { Determine total capacity of disk in tracks.  Then add up the sizes of all
     the partitions currently on the disk and compute the difference, if any,
