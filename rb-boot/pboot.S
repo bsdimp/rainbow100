@@ -47,88 +47,159 @@
 	.set	WCSR, 0x67	# Winchester command & status reg
 	.set	SECCSR, 0x68	# Secondary command & status reg
 
-	.set	wd_vec, 0x94
+	.set	wd_int, 0x25
+	.set	timer_int, 0x20	# Really vert interrupt, need to chain to real one
 
 	.set	BIOS_SEG, 0xee00
 	.set	BIOS_SP, 0x1ff7
 
+	.set	hom_buf, 0x1500
+
 	.globl	start
 	.code16
+	.arch	i8086		# Note: need clang can't cope
 start:
 	nop			# Must start with a NOP or BIOS won't jump here
-#if 0
-	push	%ax
-	movw	%sp, %cs:saved_sp
-	movw	$0x2000, %ax
-	movw	%ax, %sp
+	/*
+	 * The old PREBOOT.ASM does this. The PREBOOT code is only
+	 * 'coy' and says it is a special place for others. But it also
+	 * keeps on using the stack that the ROM BIOS setup...
+	 * And when I enable the code, boom when I try to store
+	 * to saved_sp.
+	 */
+#	movw	%sp, %cs:saved_sp
 	pushf
-	push	%di
-	push	%si
-	push	%bx
-	push	%cx
-	push	%dx
-	push	%ds
-	push	%es
-	push	%bp
-
+	pushw	%di
+	pushw	%si
+	pushw	%bp
+	pushw	%ax
+	pushw	%bx
+	pushw	%cx
+	pushw	%dx
+	pushw	%ds
+	pushw	%es
+#if 0
 	movw	BIOS_SEG, %ax
 	movw	%ax, %es
 	movw	saved_sp, %ax
 	movw	%ax, %es:BIOS_SP
 #endif
-	pushw	%ax
+	movw	%sp, %cs:saved_sp		# then this value is restored before leaving
+
 	movw	%cs,%ax
 	movw	%ax,%ds
 	movw	%ax,%es
-	mov	$hello, %ax
-	call	puts
-	/*
-	 * Let the message up for a bit
-	 */
-	movw	$-1, %cx
-1:	
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	loop	1b
+save_isr:
+	movw	$(timer_int*4), %si
+	movw	$timer_sv, %di
+	callw	moveisr
+	movw	$(wd_int*4), %si
+	movw	$wd_sv, %di
+	callw	moveisr
+est_isr:
+	movw	$(timer_int*4), %di
+	movw	$timer_isr, %ax
+	call	storeisr
+	movw	$(wd_int*4), %di
+	movw	wd_isr, %ax
+	call	storeisr
+announce:
+	movw	$hello, %si
+	callw	puts
+
+read_hom:
+
+wait_wd:
+
+wait_10s:
+	movw	$60*10, countdown
+1:
+	movw	countdown, %ax
+	or	%ax, %ax
+	jz	1f
+	hlt
+	jmp	1b
+1:
+
+rest_isr:
+	xor	%ax, %ax
+	movw	%ax, %es			# Restore %es since int 0x28 scrambles it
+	movw	$timer_sv, %si
+	movw	$(timer_int*4), %di
+	call	moveisr
+	movw	$wd_sv, %si
+	movw	$(wd_int*4), %di
+	call	moveisr
 bye:
-	pop	%bp
-	pop	%es
-	pop	%ds
-	pop	%dx
-	pop	%cx
-	pop	%bx
-	pop	%si
-	pop	%di
+	movw	$crlf, %si
+	callw	puts
+	movw	%cs:saved_sp, %sp		# Cope with stack bugs. -- assert in assembler?
+	popw	%es
+	popw	%ds
+	popw	%dx
+	popw	%cx
+	popw	%bx
+	popw	%ax
+	popw	%bp
+	popw	%si
+	popw	%di
 	popf
-#	movw	%cs:saved_sp, %sp
-	pop	%ax
 	lret
 
+moveisr:
+	cli
+	lodsw
+	stosw
+	lodsw
+	stosw
+	sti
+	ret
+
+storeisr:
+	cli
+	stosw
+	movw	%cs, %ax
+	stosw
+	sti
+	ret
 puts:
 	push	%di
-	push	%si
-	movw	%ax, %si
 1:
 	lodsb
-	or	%al,%al
+	or	%al, %al
 	je	1f
-	movw	$0, %di
+	xor	%di, %di
 	push	%si
 	int	$40
 	pop	%si
 	jmp	1b
 1:	
-	pop	%si
 	pop	%di
 	ret
+timer_isr:
+	pushw	%ax
+	movw	countdown, %ax
+	jz	1f
+	decw	%ax
+	movw	%ax, countdown
+1:
+	popw	%ax
+	ljmp	*%cs:timer_sv
+
+wd_isr:
+	pushw	%ax
+	inb	$WCSR, %al
+	movb	$0xff, intflg
+	popw	%ax
+	iret
+
 	.data
 saved_sp:	.word 0
-hello:	.asciz	"\033[H\033[J\n\n\033[1mHello World!\033[m\r\n"
+countdown:	.word 0
+intflg:		.word 0
+timer_sv:	.word 0
+	.word 0
+wd_sv:	.word 0
+	.word 0
+hello:	.asciz	"\033[H\033[J\033[1mRB-PBOOT: "
+crlf:	.asciz	"\r\n"
