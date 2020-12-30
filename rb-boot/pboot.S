@@ -57,7 +57,7 @@
 
 	.globl	start
 	.code16
-	.arch	i8086		# Note: need clang can't cope
+	.arch	i8086		# Note: need binutils as clang can't cope
 start:
 	nop			# Must start with a NOP or BIOS won't jump here
 	/*
@@ -67,7 +67,7 @@ start:
 	 * And when I enable the code, boom when I try to store
 	 * to saved_sp.
 	 */
-#	movw	%sp, %cs:saved_sp
+	movw	%sp, %cs:saved_sp
 	pushf
 	pushw	%di
 	pushw	%si
