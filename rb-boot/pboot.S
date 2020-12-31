@@ -10,13 +10,12 @@
  * implied warranties, including, without limitation, the implied
  * warranties of merchantability and fitness for a particular
  * purpose.
- *	
  */
 
 /*
  * Replacement program insipired by PREBOOT.ASM from WUTIL.
  * But one that's slightly more chatty since we have oodles of
- * space
+ * space. This is a caller saves what they care about file.
  */
 
 /*
@@ -25,7 +24,8 @@
  * that called us.
  */
 
-
+#define TIMER
+#define VERBOSE
 /*
  * Constants for the disk controller
  */
@@ -47,13 +47,17 @@
 	.set	WCSR, 0x67	# Winchester command & status reg
 	.set	SECCSR, 0x68	# Secondary command & status reg
 
-	.set	wd_int, 0x25
+	.set	wd_int, 0x25	# Expansion card interrupt
 	.set	timer_int, 0x20	# Really vert interrupt, need to chain to real one
 
 	.set	BIOS_SEG, 0xee00
 	.set	BIOS_SP, 0x1ff7
 
-	.set	hom_buf, 0x1500
+	.set	bios, 40
+	.set	hom_buf, 0x1500	# Secondary loader expects this here
+	.set	sec_load, 0x2000 # Where to put secondary loader
+
+	.set	hom_boot, 33
 
 	.globl	start
 	.code16
@@ -67,7 +71,7 @@ start:
 	 * And when I enable the code, boom when I try to store
 	 * to saved_sp.
 	 */
-	movw	%sp, %cs:saved_sp
+#	movw	%sp, %cs:saved_sp
 	pushf
 	pushw	%di
 	pushw	%si
@@ -90,50 +94,104 @@ start:
 	movw	%ax,%ds
 	movw	%ax,%es
 save_isr:
+#ifdef TIMER
 	movw	$(timer_int*4), %si
 	movw	$timer_sv, %di
 	callw	moveisr
+#endif
 	movw	$(wd_int*4), %si
 	movw	$wd_sv, %di
 	callw	moveisr
 est_isr:
+#ifdef TIMER
 	movw	$(timer_int*4), %di
 	movw	$timer_isr, %ax
 	call	storeisr
+#endif
 	movw	$(wd_int*4), %di
-	movw	wd_isr, %ax
+	movw	$wd_isr, %ax
 	call	storeisr
+#ifdef VERBOSE
 announce:
 	movw	$hello, %si
 	callw	puts
+#endif
 
 read_hom:
+	xor	%bx, %bx			# Track 0
+	mov	$2, %cx				# Sector 2 is HOM block
+	movw	$hom_buf, %di			# Shared buffer with secboot
+	call	read_sector
 
-wait_wd:
-
-wait_10s:
-	movw	$60*10, countdown
+	movw	$hom_buf, %si
+	movw	%si, %bx
+	movw	$512 / 2, %cx
+	xor	%dx, %dx
+1:	lodsw
+	add	%ax, %dx
+	loop	1b
+	jz	good
 1:
-	movw	countdown, %ax
-	or	%ax, %ax
-	jz	1f
-	hlt
-	jmp	1b
-1:
+#ifdef VERBOSE
+	movw	$bad_hom, %si
+	call	puts
+#endif
+	jmp	error_exit
+good:
+	movw	$0x4f48, %ax			# 'HO'
+	cmpw	%ax, 0(%bx)
+	jne	1b
+	movw	$0x4d, %ax			# 'M<NUL>'
+	cmpw	%ax, 0(%bx)
+	jne	1b
 
+	# %es already good
+	movw	$sec_load, %di
+	movw	hom_boot(%bx), %dx		# Move track to DX for the moment
+	movb	(hom_boot+2)(%bx), %al		# Move sector to cl
+	movw	(hom_boot+3)(%bx), %cx		# length
+	movw	%dx, %bx
+	movb	%al, sector			# save the current sector
+1:
+	push	%cx
+	movb	sector, %cl			# save the current sector
+	# %bx has track alrady
+	# %ep:%di has been updated to the new pointer
+	# %cl has sector
+	call	read_sector			# success or error exit
+	incb	sector
+	pop	%cx
+	loop	1b
+
+	/*
+	 * OK. We've read in things. Validate that the secondary
+	 * boot starts with 'S' and jump to it if it does
+	 */
+	movw	$sec_load, %si
+	lodsb
+	cmp	'S', %al
+	jne	1f
+	jmp	*%si
+1:
+#ifdef VERBOSE
+	movw	$bad_sec, %si
+	call	puts
+#endif
 rest_isr:
-	xor	%ax, %ax
-	movw	%ax, %es			# Restore %es since int 0x28 scrambles it
+#ifdef TIMER
 	movw	$timer_sv, %si
 	movw	$(timer_int*4), %di
 	call	moveisr
+#endif
 	movw	$wd_sv, %si
 	movw	$(wd_int*4), %di
 	call	moveisr
-bye:
+
+#ifdef VERBOSE
 	movw	$crlf, %si
 	callw	puts
-	movw	%cs:saved_sp, %sp		# Cope with stack bugs. -- assert in assembler?
+#endif
+	movw	saved_sp, %sp
 	popw	%es
 	popw	%ds
 	popw	%dx
@@ -145,6 +203,25 @@ bye:
 	popw	%di
 	popf
 	lret
+
+error_exit:
+#ifdef TIMER
+	call	wait_10s
+#endif
+	jmp	rest_isr
+
+#ifdef TIMER
+wait_10s:
+	movw	$60*10, countdown
+1:
+	movw	countdown, %ax
+	or	%ax, %ax
+	jz	1f
+	hlt
+	jmp	1b
+1:
+	ret
+#endif
 
 moveisr:
 	cli
@@ -162,20 +239,49 @@ storeisr:
 	stosw
 	sti
 	ret
+#ifdef VERBOSE
 puts:
-	push	%di
 1:
 	lodsb
 	or	%al, %al
 	je	1f
 	xor	%di, %di
-	push	%si
-	int	$40
-	pop	%si
+	pushw	%si
+	pushw	%es
+	int	$bios
+	popw	%es
+	popw	%si
 	jmp	1b
-1:	
-	pop	%di
+1:
 	ret
+puthexb:
+	std
+	movw	$hexbuf, %di
+	incw	%di
+	incw	%di
+	movb	%al, %ah
+	call	ph_store1
+	movb	%ah, %al
+	shrb	%al
+	shrb	%al
+	shrb	%al
+	shrb	%al
+	call	ph_store1
+	cld
+	movw	%di, %si
+	call	puts
+	ret
+ph_store1:
+	andb	$0xf, %al
+	cmp	$9, %al
+	ja	1f
+	add	'0', %al
+	jmp	2f
+1:	add	'a', %al
+2:	stosb
+	ret
+#endif
+#ifdef TIMER
 timer_isr:
 	pushw	%ax
 	movw	countdown, %ax
@@ -185,6 +291,7 @@ timer_isr:
 1:
 	popw	%ax
 	ljmp	*%cs:timer_sv
+#endif
 
 wd_isr:
 	pushw	%ax
@@ -193,13 +300,96 @@ wd_isr:
 	popw	%ax
 	iret
 
+/*
+ * Reads in one sector. Passed in LBA to read.
+ * Returns data to %es:%di.
+ * Track in %bx, sector in %cl
+ * Destorys all non-segment registers
+ */
+read_sector:
+	movb	$1, %al			# One sector
+	outb	%al, $WSECCNT
+	movb	%cl, %al		# Sector number
+	outb	%al, $WSECT
+	movw	%bx, %ax
+	xor	%dx, %dx
+	divw	surfaces		# %ax cylinder dx surface/hd
+	outb	%al, $WCYLL		# Program cylninder
+	movb	%ah, %al
+	outb	%al, $WCYLH
+	movb	%dl, %al		# Program head
+	orb	$SEC512, %al		# ... and sector length
+	outb	%al, $WSDH
+	movb	$0, intflg		# Clear interrupt flag
+#ifdef TIMER
+	movw	$60, countdown		# and start timer
+#endif
+	movb	$READCMD, %al		# Start the read
+	outb	%al, $WCSR
+1:					# Wait for the interrupt
+	movb	intflg, %al
+	orb	%al, %al
+	jnz	1f
+#ifdef TIMER
+	movw	countdown, %ax
+	orw	%ax, %ax
+	jz	wd_timeout
+#endif
+	hlt
+	jmp	1b
+1:
+	# It completed
+	inb	$WCSR, %al
+	test	$0x21, %al
+	jz	1f
+#ifdef VERBOSE
+	push	%ax
+	movw	$wd_err, %si
+	callw	puts
+	pop	%ax
+	call	puthexb
+#endif
+	jmp	error_exit
+1:
+	movw	$512, %cx
+2:	in	$WDATA, %al
+	stosb
+	loop	2b
+
+	mov	$1, %al
+	outb	%al, $SECCSR
+	mov	100, %cx
+1:	nop
+	loop	1b
+	ret
+#ifdef TIMER
+wd_timeout:
+#ifdef VERBOSE
+	movw	$timeout, %si
+	callw	puts
+#endif
+	jmp	error_exit
+#endif
 	.data
+surfaces:	.word 1
+#ifdef VERBOSE
+hello:		.asciz	"\033[H\033[JRB-PBOOT: "
+timeout:	.asciz  "Timeout"
+wd_err:		.asciz	"Err "
+bad_hom:	.asciz	"Bad HOM"
+bad_sec:	.asciz	"Bad Boot"
+crlf:		.asciz	"\r\n"
+#endif
 saved_sp:	.word 0
+#ifdef TIMER
 countdown:	.word 0
-intflg:		.word 0
 timer_sv:	.word 0
-	.word 0
-wd_sv:	.word 0
-	.word 0
-hello:	.asciz	"\033[H\033[J\033[1mRB-PBOOT: "
-crlf:	.asciz	"\r\n"
+		.word 0
+#endif
+wd_sv:		.word 0
+		.word 0
+intflg:		.byte 0
+sector:		.byte 0
+#ifdef VERBOSE
+hexbuf:		.space 5
+#endif
