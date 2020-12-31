@@ -74,7 +74,7 @@ start:
 	 * And when I enable the code, boom when I try to store
 	 * to saved_sp.
 	 */
-#	movw	%sp, %cs:saved_sp
+	movw	%sp, %cs:saved_sp
 	pushf
 	pushw	%di
 	pushw	%si
@@ -85,7 +85,7 @@ start:
 	pushw	%dx
 	pushw	%ds
 	pushw	%es
-#if 0
+#if 1
 	movw	BIOS_SEG, %ax
 	movw	%ax, %es
 	movw	saved_sp, %ax
@@ -129,6 +129,9 @@ read_hom:
 	movw	$hom_buf, %di			# Shared buffer with secboot
 	call	read_sector
 
+/*
+ * Make sure the checksum is good...
+ */
 	movw	$hom_buf, %si
 	movw	%si, %bx
 	movw	$512 / 2, %cx
@@ -175,9 +178,14 @@ good:
 	 */
 	movw	$sec_load, %si
 	lodsb
-	cmp	'S', %al
+	cmp	$'S', %al
 	jne	1f
-	jmp	*%si
+	push	%si
+	movw	$go, %si
+	call	puts
+	pop	%si
+	call	*%si
+	jmp	rest_isr
 1:
 #ifdef VERBOSE
 	movw	$bad_sec, %si
@@ -339,13 +347,14 @@ wd_timeout:
 #endif
 	jmp	error_exit
 	.data
-surfaces:	.word 1
+surfaces:	.word 8		# Assume max XXX need to update
 #ifdef VERBOSE
 hello:		.asciz	"\033[H\033[JRB-PBOOT: "
 timeout:	.asciz  "Timeout"
 wd_err:		.asciz	"Err "
 bad_hom:	.asciz	"Bad HOM"
 bad_sec:	.asciz	"Bad Boot"
+go:		.asciz	"WE ARE GO!"
 crlf:		.asciz	"\r\n"
 #endif
 saved_sp:	.word 0
