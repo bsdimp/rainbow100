@@ -96,6 +96,19 @@ start:
 	movw	%cs,%ax
 	movw	%ax,%ds
 	movw	%ax,%es
+#ifdef RE_INIT
+	/*
+	 * The BIOS has to initialize the controller to read the boot, so do we
+	 * really need to do this? The previous PREBOOT.ASM does this, but I
+	 * think it's not needed and things work without it and it's 10 bytes
+	 * smaller w/o.
+	 */
+	movb	$2, %al				# Initialize the controller
+	outb	%al, $SECCSR
+	movw	$100, %cx
+1:	nop
+	loop	1b
+#endif
 save_isr:
 	movw	$(wd_int*4), %si
 	movw	$wd_sv, %di
