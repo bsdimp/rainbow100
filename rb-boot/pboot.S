@@ -177,6 +177,10 @@ good:
 	movw	$bad_sec, %si
 	call	puts
 #endif
+error_exit:
+#ifdef TIMER
+	call	wait_10s
+#endif
 rest_isr:
 #ifdef TIMER
 	movw	$timer_sv, %si
@@ -203,12 +207,6 @@ rest_isr:
 	popw	%di
 	popf
 	lret
-
-error_exit:
-#ifdef TIMER
-	call	wait_10s
-#endif
-	jmp	rest_isr
 
 #ifdef TIMER
 wait_10s:
