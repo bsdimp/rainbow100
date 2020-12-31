@@ -24,7 +24,11 @@
  * that called us.
  */
 
-#define TIMER
+/*
+ * For timeouts and waiting we use the fact that the vertical interrupt
+ * runs at 60Hz (we should maybe get the rate from int $rom) and do
+ * a hlt loop since a hlp resumes after an interrupt.
+ */
 #define VERBOSE
 /*
  * Constants for the disk controller
@@ -48,7 +52,6 @@
 	.set	SECCSR, 0x68	# Secondary command & status reg
 
 	.set	wd_int, 0x25	# Expansion card interrupt
-	.set	timer_int, 0x20	# Really vert interrupt, need to chain to real one
 
 	.set	BIOS_SEG, 0xee00
 	.set	BIOS_SP, 0x1ff7
@@ -94,20 +97,10 @@ start:
 	movw	%ax,%ds
 	movw	%ax,%es
 save_isr:
-#ifdef TIMER
-	movw	$(timer_int*4), %si
-	movw	$timer_sv, %di
-	callw	moveisr
-#endif
 	movw	$(wd_int*4), %si
 	movw	$wd_sv, %di
 	callw	moveisr
 est_isr:
-#ifdef TIMER
-	movw	$(timer_int*4), %di
-	movw	$timer_isr, %ax
-	call	storeisr
-#endif
 	movw	$(wd_int*4), %di
 	movw	$wd_isr, %ax
 	call	storeisr
@@ -178,15 +171,11 @@ good:
 	call	puts
 #endif
 error_exit:
-#ifdef TIMER
-	call	wait_10s
-#endif
+	movw	$60*10, %cx
+1:
+	hlt
+	loop	1b
 rest_isr:
-#ifdef TIMER
-	movw	$timer_sv, %si
-	movw	$(timer_int*4), %di
-	call	moveisr
-#endif
 	movw	$wd_sv, %si
 	movw	$(wd_int*4), %di
 	call	moveisr
@@ -207,19 +196,6 @@ rest_isr:
 	popw	%di
 	popf
 	lret
-
-#ifdef TIMER
-wait_10s:
-	movw	$60*10, countdown
-1:
-	movw	countdown, %ax
-	or	%ax, %ax
-	jz	1f
-	hlt
-	jmp	1b
-1:
-	ret
-#endif
 
 moveisr:
 	cli
@@ -279,17 +255,6 @@ ph_store1:
 2:	stosb
 	ret
 #endif
-#ifdef TIMER
-timer_isr:
-	pushw	%ax
-	movw	countdown, %ax
-	jz	1f
-	decw	%ax
-	movw	%ax, countdown
-1:
-	popw	%ax
-	ljmp	*%cs:timer_sv
-#endif
 
 wd_isr:
 	pushw	%ax
@@ -319,22 +284,16 @@ read_sector:
 	orb	$SEC512, %al		# ... and sector length
 	outb	%al, $WSDH
 	movb	$0, intflg		# Clear interrupt flag
-#ifdef TIMER
-	movw	$60, countdown		# and start timer
-#endif
 	movb	$READCMD, %al		# Start the read
 	outb	%al, $WCSR
+	movw	$60, %cx		# and start timer for 1s
 1:					# Wait for the interrupt
 	movb	intflg, %al
 	orb	%al, %al
 	jnz	1f
-#ifdef TIMER
-	movw	countdown, %ax
-	orw	%ax, %ax
-	jz	wd_timeout
-#endif
 	hlt
-	jmp	1b
+	loop	1b
+	jmp	wd_timeout
 1:
 	# It completed
 	inb	$WCSR, %al
@@ -360,14 +319,12 @@ read_sector:
 1:	nop
 	loop	1b
 	ret
-#ifdef TIMER
 wd_timeout:
 #ifdef VERBOSE
 	movw	$timeout, %si
 	callw	puts
 #endif
 	jmp	error_exit
-#endif
 	.data
 surfaces:	.word 1
 #ifdef VERBOSE
@@ -379,11 +336,6 @@ bad_sec:	.asciz	"Bad Boot"
 crlf:		.asciz	"\r\n"
 #endif
 saved_sp:	.word 0
-#ifdef TIMER
-countdown:	.word 0
-timer_sv:	.word 0
-		.word 0
-#endif
 wd_sv:		.word 0
 		.word 0
 intflg:		.byte 0
