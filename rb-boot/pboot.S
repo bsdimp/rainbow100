@@ -142,7 +142,7 @@ good:
 	cmpw	%ax, 0(%bx)
 	jne	1b
 	movw	$0x4d, %ax			# 'M<NUL>'
-	cmpw	%ax, 0(%bx)
+	cmpw	%ax, 2(%bx)
 	jne	1b
 
 	# %es already good
