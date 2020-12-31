@@ -71,10 +71,10 @@ start:
 	 * The old PREBOOT.ASM does this. The PREBOOT code is only
 	 * 'coy' and says it is a special place for others. But it also
 	 * keeps on using the stack that the ROM BIOS setup...
-	 * And when I enable the code, boom when I try to store
-	 * to saved_sp.
 	 */
+#if SAVE_SP_TO_BIOS
 	movw	%sp, %cs:saved_sp
+#endif
 	pushf
 	pushw	%di
 	pushw	%si
@@ -85,17 +85,16 @@ start:
 	pushw	%dx
 	pushw	%ds
 	pushw	%es
-#if 1
+#if SAVE_SP_TO_BIOS
 	movw	BIOS_SEG, %ax
 	movw	%ax, %es
 	movw	saved_sp, %ax
 	movw	%ax, %es:BIOS_SP
 #endif
-	movw	%sp, %cs:saved_sp		# then this value is restored before leaving
-
 	movw	%cs,%ax
 	movw	%ax,%ds
 	movw	%ax,%es
+	movw	%sp, saved_sp			# then this value is restored before leaving
 #ifdef RE_INIT
 	/*
 	 * The BIOS has to initialize the controller to read the boot, so do we
@@ -178,13 +177,9 @@ good:
 	 */
 	movw	$sec_load, %si
 	lodsb
-	cmp	$'S', %al
+	cmpb	$'S', %al
 	jne	1f
-	push	%si
-	movw	$go, %si
-	call	puts
-	pop	%si
-	call	*%si
+	lcall	$0x200, $0x1
 	jmp	rest_isr
 1:
 #ifdef VERBOSE
@@ -354,7 +349,6 @@ timeout:	.asciz  "Timeout"
 wd_err:		.asciz	"Err "
 bad_hom:	.asciz	"Bad HOM"
 bad_sec:	.asciz	"Bad Boot"
-go:		.asciz	"WE ARE GO!"
 crlf:		.asciz	"\r\n"
 #endif
 saved_sp:	.word 0
