@@ -45,17 +45,30 @@
 	.endm
 
 	# These seem to be a general data port
+	# Port 71 is twiddled and/or we wait for bits to be set
+	# and then we transfer data to/from this port.
 	.set	in70, 0x70
 	.set	out70, 0x70
-	# This seems to be a status / ISR port
+
+	# This seems to be a status / ISR port.
+	# There's only 1 write of port 71, and that's whatever bits
+	# are set on startup when bit1 (0x2) is set.
 	.set	in71, 0x71
 	.set	out71, 0x71
 	.set	p71_bit0, 0x01
-	.set	p71_bit1, 0x02
+	.set	p71_BUS_IDLE, 0x02
+	# bit 2 appears unused
 	.set	p71_bit3, 0x08
 	.set	p71_bit4, 0x10
-	# unsure
-	# no input?
+	# bit 5 appears unused
+	# bit 6 appears unused
+	# bit 7 appears unused
+
+	# Two values are written to port 72.
+	# 1 is written I think to assert control over the
+	# bus (or maybe to start a new transaction /
+	# reset the old one).
+	# 0 is written when bit0 of port 71 goes low.
 	.set	out72, 0x72
 
 	# SCSI op codes
@@ -139,7 +152,7 @@ u_media_check:	lds %cs:u_pkt,%bx
 		jmp u_done
 
 	.ascii	"build bpb"
-u_build_bpb:	cbw 
+u_build_bpb:	cbw
 		shl $0x1,%ax
 		mov %ax,%bx
 		mov bpb_ptr(%bx),%di
@@ -150,16 +163,24 @@ u_build_bpb:	cbw
 
 	.ascii "BIOS param. block "
 	# Start of BPBs
-.macro bpb bps, spau, res_sec, nofat, rootdir, logsec, media, fat_sec
+.macro bpb bps, spau, rsvd, nofat, rootdir, logsec, media, fat_sec
 	.word \bps
 	.byte \spau
-	.word \res_sec
+	.word \rsvd
 	.byte \nofat
 	.word \rootdir
 	.word \logsec
 	.byte \media
 	.word \fat_sec
 .endm
+	.set bpb_bps, 0		# w: bytes per sector
+	.set bpb_spau, 2	# b: sectors per allocation unit
+	.set bpb_rsvd, 3	# w: Number of reserved sectors ????
+	.set bpb_nofat, 5	# b: Number of FATs at start of disk
+	.set bpb_rootdir, 6 	# w: Number of dir entries
+	.set bpb_logsec, 8	# w: Number of sectors in the logical image
+	.set bpb_media, 10	# b: media descritor byte
+	.set bpb_fat_sec, 11	# w: number of FAT sectors
 	.set bpb_len, 13
 bpbs:
 	bpb 512, 8, 0, 2, 256, 0, 0xf8, 9
@@ -333,7 +354,7 @@ putdec:		mov $0x0,%bl		#296
 		call putchar
 		pop %dx
 1:		mov %dx,%ax		#c47
-		ret 
+		ret
 	#
 	# Prints the NUL terminated string that follows
 	# the call. Assume no regsiters are preserved.
@@ -352,7 +373,7 @@ putchar:	mov %al,%cl
 		xor %di,%di
 		int $0x18
 		pop %bx
-		ret 
+		ret
 
 	# %bx is cdb
 	# %di is buffer
@@ -397,21 +418,21 @@ do_xxx_xfer:	push %bx
 		pop %es
 		call wait_not_busy
 		pop %ax
-1:		ret 
+1:		ret
 
 claim_bus:	in $in71,%al
-		test $p71_bit1,%al
+		test $p71_BUS_IDLE,%al
 		jnz claim_bus
 		mov $0x1,%al
 		out %al,$out70
 		mov $0x1,%al
 		out %al,$out72
 1:		in $in71,%al
-		test $p71_bit1,%al
+		test $p71_BUS_IDLE,%al
 		jz 1b
-		sub %al,%al		#355
+		sub %al,%al
 		out %al,$out72
-		ret 
+		ret
 # 35a
 	# I think %bx points to the cdb/bytes to send to card
 xfer_cdb:	push %bx
@@ -447,13 +468,13 @@ read_from_card:
 		test $p71_bit3,%al
 		jnz rfc_done		# bit 8 set -> we're done
 2:		in $in70,%al		# Transfer out 4 bytes of card's buffer to host buffer
-		stosb 
+		stosb
 		in $in70,%al
-		stosb 
+		stosb
 		in $in70,%al
-		stosb 
+		stosb
 		in $in70,%al
-		stosb 
+		stosb
 		in $in71,%al
 		and %dl,%al		# Bits 0 and 3
 		cmp %dh,%al		# only bit 3 set
@@ -477,7 +498,7 @@ write_to_card:	push %bx
 		jz 1b			# Wait for bit1 to turn on
 		test $0x8,%al		# Bit 8 set -> we're done?
 		jnz wtc_done
-2:		lodsb 
+2:		lodsb
 		out %al,$out70
 		in $in71,%al
 		and %dl,%al		# mask out all but 8 bit and 1 bit
@@ -491,23 +512,56 @@ wtc_done:	xchg %bx,%si
 ret_xferd:	mov %bx,%ax			# Return number of bytes transferred
 		pop %bx
 		sub %bx,%ax
-		ret 
-wait_not_busy:	call wait_71_bit0		# Or maybe getbus status?
+		ret
+	# XXX figure out what is going on here...
+	# I think we're reading the status of the bus: from the standard.
+	# ==============================================================================
+	#   Bit|   7    |   6    |   5    |   4    |   3    |   2    |   1    |   0    |
+	# Byte |        |        |        |        |        |        |        |        |
+	# ==============================================================================
+	# 0   |Reserved|  Vendor Unique  |        Status Byte Code           |   V    |
+	# ==============================================================================
+	# Bits of Status Byte
+	# -----------------------------
+	# 7   6   5   4   3   2   1   0    Status(es) Represented
+	# ------------------------------------------------------------------------------
+	# R   V   V   0   0   0   0   V    GOOD
+	# R   V   V   0   0   0   1   V    CHECK CONDITION
+	# R   V   V   0   0   1   0   V    CONDITION MET/GOOD
+	# R   V   V   0   0   1   1   V    Reserved
+	# R   V   V   0   1   0   0   V    BUSY				XXX
+	# R   V   V   0   1   0   1   V    Reserved			XXX
+	# R   V   V   0   1   1   0   V    Reserved			XXX
+	# R   V   V   0   1   1   1   V    Reserved			XXX
+	# R   V   V   1   0   0   0   V    INTERMEDIATE/GOOD
+	# R   V   V   1   0   0   1   V    Reserved
+	# R   V   V   1   0   1   0   V    INTERMEDIATE/CONDITION MET/GOOD
+	# R   V   V   1   0   1   1   V    Reserved
+	# R   V   V   1   1   0   0   V    RESERVATION CONFLICT 	XXX
+	# R   V   V   1   1   0   1   V    Reserved			XXX
+	# R   V   V   1   1   1   0   V    Reserved			XXX
+	# R   V   V   1   1   1   1   V    Reserved			XXX
+	# ==============================================================================
+	# So it's either BUSY or RESERVATION CONFLICT, both of which will cause us
+	# to do_xxx_xfer, though... is that a retry?
+	# 0 causes us to do nothing...
+wait_not_busy:	call wait_71_bit0		# Or maybe get bus status?
 		in $in70,%al
 		mov %al,%ah
 		call wait_71_bit0
 		in $in70,%al
 		mov %ah,%al
-		test $p71_bit3,%al			# 70 Bit 3 means error????
+		test $0x8,%al			# 70 Bit 3 means error???? Or is that a status coming back.
 		jz 1f
-		stc 
-		ret 
+		stc
+		ret
 1:		test %al,%al
-		ret 
+		ret
+	# Waits for bit 0 (0x1) of port 71 to turn on
 wait_71_bit0:	in $in71,%al
 		test $p71_bit0,%al
 		jz wait_71_bit0
-		ret 
+		ret
 u_drv_init:	mov num_parts,%al
 		lds %cs:u_pkt,%bx
 		mov %al,0xd(%bx)
@@ -517,7 +571,10 @@ u_drv_init:	mov num_parts,%al
 		mov %cs,0x14(%bx)
 		jmp u_done
 
-	# Store 0xe000 into 0x4000:0 to 0xe000:0... Why?
+	# Store 0xe000 into 0x4000:0 to 0xdfff:f.
+	# Older versions of DOS (maybe the firmware too) didn't initialize this
+	# memory, leading to problems. Since this HBA is piggy backed on the
+	# memory board, this is a workaround for that issue.
 u_init:		mov $0xe000,%ax
 		mov $0x4000,%di
 1:		mov %di,%es
@@ -528,9 +585,23 @@ u_init:		mov $0xe000,%ax
 		add $0x1000,%di
 		cmp %ax,%di
 		jc 1b
-	# Check for bit2 of port 0x71 status
+
+	#
+	# Sanity check the HBA to see if it's there. We look at what appears
+	# to be the 'BUS BUSY' bit (though maybe it's an initiator busy bit)
+	# and if it's clear, we assume life is good. Then we write the value
+	# back and re-read. Maybe writing clears the bits (a common design)
+	# but we do it no-where else. We re-read and if it is still 'ff' then
+	# we'll exit without setting up the BPB array. Otherwise, we proceed
+	# to reading in and parsing the 'hi' or 'ho' block defining Univation's
+	# partioning scheme.
+	#
+	# It appears that they sold a unit that responded to both LUN 0 and
+	# LUN 1 (which is encoded in the CDB as 0x20). Note that they don't
+	# walk through the list of all possible SCSI IDs here.
+	#
 		in $in71,%al
-		test $0x2,%al
+		test $p71_BUS_IDLE,%al
 		jz 1f
 		out %al,$out71
 		in $in71,%al
@@ -550,13 +621,13 @@ u_init:		mov $0xe000,%ax
 		cmpw $0x0,0x2(%bp)
 		jnz 1f
 		movw $0x4,0x2(%bp)
-1:		ret 
+1:		ret
 
-read_hom:	push %di		# Name unsure...
+read_hom:	push %di
 		mov $scsi_cdb,%bx
 		movw $OP_READ,(%bx)		# READ6 opcode + LUN0 / 4msb LBA 0
-		movw $0x0,0x2(%bx)	# LBA 0
-		movb $0x1,0x4(%bx)	# Transfer Length 1
+		movw $0x0,0x2(%bx)		# LBA 0
+		movb $0x1,0x4(%bx)		# Transfer Length 1
 		mov $home_block,%di
 		mov %ds,%ax
 		mov %ax,%es
@@ -564,12 +635,38 @@ read_hom:	push %di		# Name unsure...
 		pop %di
 		testb $0xff,last_status
 		jz 1f				# it worked!
-		ret 
+		ret
+
 	# Look for hi or ho block -- ho is 'newer' and allows up to 4 parts, hi is
 	# older and allows only one.
+
+	# hi Block:
+	# ==============================================================================
+	#   Bit|   7    |   6    |   5    |   4    |   3    |   2    |   1    |   0    |
+	# Byte |        |        |        |        |        |        |        |        |
+	# ==============================================================================
+       	#   0  |                      0x68 'h'                                         |
+	# -----|-----------------------------------------------------------------------|
+       	#   1  |                      0x69 'i'                                         |
+	# -----|-----------------------------------------------------------------------|
+       	#   2  |                         Start LSB                                     |
+	# -----|-----------------------------------------------------------------------|
+       	#   3  |                         Start MSB                                     |
+	# -----|-----------------------------------------------------------------------|
+       	#   4  |                  Length of Boot blocks? LSB                           |
+       	# -----|-----------------------------------------------------------------------|
+       	#   5  |                  Length of Boot blocks? MSB                           |
+	# -----|-----------------------------------------------------------------------|
+       	#   6  |                       Data Length LSB                                 |
+       	# -----|-----------------------------------------------------------------------|
+       	#   7  |                       Data Length MSB                                 |
+	# ==============================================================================
+	#
+	# Whatever these units are, we multiply them by 0x24 (36)
+	#
 1:		cmpw $0x6968,home_block		# Look for hi block 1
 		jnz 1f
-		mov (home_block+2),%ax			# Process hi block
+		mov (home_block+2),%ax		# Process hi block
 		add (home_block+4),%ax
 		mov $0x24,%cx
 		mul %cx
@@ -578,20 +675,148 @@ read_hom:	push %di		# Name unsure...
 		mov $0x24,%cx
 		mul %cx
 		pop %cx
-		jmp decode_part	# 4f0 -> 4ea or -6!
+		jmp decode_part
 	pad #4ac
 1:		cmpw $0x6f68,home_block		# Look for ho in block 1
 		jz ho_blk
-		ret 
+		ret
+	# ho Block:
+	# ==============================================================================
+	#   Bit|   7    |   6    |   5    |   4    |   3    |   2    |   1    |   0    |
+	# Byte |        |        |        |        |        |        |        |        |
+	# ==============================================================================
+       	#   0  |                      0x68 'h'                                         |
+	# -----|-----------------------------------------------------------------------|
+       	#   1  |                      0x6f 'o'                                         |
+	# -----|-----------------------------------------------------------------------|
+       	#   2  |                             01     start lsb?                         |
+	# -----|-----------------------------------------------------------------------|
+       	#   3  |                             00	    start msb?                         |
+	# -----|-----------------------------------------------------------------------|
+       	#   4  |                             00     rsvd lsb                           |
+       	# -----|-----------------------------------------------------------------------|
+       	#   5  |                             00     rsvd msb                           |
+	# -----|-----------------------------------------------------------------------|
+       	#   6  |                             63                                        |
+       	# -----|-----------------------------------------------------------------------|
+       	#   7  |                             02                                        |
+	# ==============================================================================
+       	#      |                  Partition Descriptor Entries (8 max)                 |
+ 	# ==============================================================================
+	#   Bit|   7    |   6    |   5    |   4    |   3    |   2    |   1    |   0    |
+	# Byte |        |        |        |        |        |        |        |        |
+	# ==============================================================================
+       	#   0  |              partition type name                                      |
+	# -----|-----------------------------------------------------------------------|
+       	#   1  |                             .                                         |
+	# -----|-----------------------------------------------------------------------|
+       	#   2  |                             .                                         |
+	# -----|-----------------------------------------------------------------------|
+       	#   3  |                             .                                         |
+	# -----|-----------------------------------------------------------------------|
+       	#   4  |                             .                                         |
+       	# -----|-----------------------------------------------------------------------|
+       	#   5  |                             .                                         |
+	# -----|-----------------------------------------------------------------------|
+       	#   6  |                             .                                         |
+       	# -----|-----------------------------------------------------------------------|
+       	#   7  |              partition type name                                      |
+	# -----|-----------------------------------------------------------------------|
+       	#   8  |              partition type display name                              |
+	# -----|-----------------------------------------------------------------------|
+       	#   9  |                             .                                         |
+	# -----|-----------------------------------------------------------------------|
+       	#  10  |                             .                                         |
+ 	# -----|-----------------------------------------------------------------------|
+       	#  11  |                             .                                         |
+	# -----|-----------------------------------------------------------------------|
+       	#  12  |                             .                                         |
+       	# -----|-----------------------------------------------------------------------|
+       	#  13  |                             .                                         |
+	# -----|-----------------------------------------------------------------------|
+       	#  14  |                             .                                         |
+       	# -----|-----------------------------------------------------------------------|
+       	#  15  |              partition type display name                              |
+       	# -----|-----------------------------------------------------------------------|
+       	#  16  |                     Must be 0?                                        |
+	# -----|-----------------------------------------------------------------------|
+       	#  17  |                     Must be 0?                                        |
+	# -----|-----------------------------------------------------------------------|
+       	#  18  |                     Must be 0?                                        |
+	# -----|-----------------------------------------------------------------------|
+       	#  19  |                     Must be 0?                                        |
+	# ==============================================================================
+       	#      |                  Partition Entries (4 of these)                       |
+ 	# ==============================================================================
+	#   Bit|   7    |   6    |   5    |   4    |   3    |   2    |   1    |   0    |
+	# Byte |        |        |        |        |        |        |        |        |
+	# ==============================================================================
+       	#   0  |                  Start of partition LSB (sector)                      |
+	# -----|-----------------------------------------------------------------------|
+       	#   1  |                  Start of partition MSB                               |
+	# -----|-----------------------------------------------------------------------|
+       	#   2  |                  Length of partition LSB (sector)                     |
+	# -----|-----------------------------------------------------------------------|
+       	#   3  |                  Length of partition MSB                              |
+	# ==============================================================================
+	#
+	# or in a packed C structure:
+	# struct ho {
+	#	char magic[2];
+	#	uint16_t rsvd_sectors; /* ? */
+	#	uint16_t start_sector ; /* ? */
+	#	uint16_t tracks; /* ? */
+	# 	struct part_desc {
+	#		char part_name[8];
+	#		char display_name[8];
+	#		uint16_t mbz1;
+	#		uint16_t mbz2;
+	#		struct info {		/* In sectors */
+	#			uint16_t start;
+	#			uint16_t len;
+	#		} info[4];
+	#	} parts[8];
+	# };
+	#
+	# Note: this couldn't describe more than 32MB drive
+	#
+# Example ho block:
+# 00000000  68 6f 01 00 00 00 63 02  43 50 2f 4d 20 20 20 20  |ho....c.CP/M    |
+# 00000010  63 70 2f 6d 38 36 38 30  00 00 00 00 01 00 23 00  |cp/m8680......#.|
+# 00000020  24 00 00 00 24 00 00 00  24 00 00 00 4d 53 44 4f  |$...$...$...MSDO|
+# 00000030  53 20 20 20 6d 73 2d 64  6f 73 20 20 00 00 00 00  |S   ms-dos  ....|
+# 00000040  24 00 ec 55 00 00 00 00  00 00 00 00 00 00 00 00  |$..U............|
+# 00000050  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+#
+# 20944 seectors from mfm_read
+# Geometry in manual given as:
+# Heads: 4
+# Cylinders: 306
+# Google search for drive gives 17 sectors per track
+# 4*306*17 = 20808
+# This suggests a slight underformatting of the MFM drive
+# To account for mfg tracks. The math works out if we have 2 mfg tracks.
+#
+# 0x263 = 611 or 306*2-1 -- Unclear if this was done in error (entering the paramters
+# for the 20MB at HDSETUP time) or not.
+#
+# So, CP/M starts at sector 1, end at sector 35 (and then there's 3 more that start
+# at 36, but have 0 length so are ignored). This is too small for a real CP/M partition.
+#	
+# MSDOS partition: starts at sector 36 ends at sector 21996+36-1 which is past the end
+# of the media, suggesting the 611 number was in error and this partition was too big
+# but nobody ever noticed. It seems to have about 5MB of data on it.
+#
+	# %di has current bpb in it
 ho_blk:		mov $home_block+8,%si		# Process ho block
 		mov $0x8,%cx			# up to 8 partitions
 		push %di
-		cld 
+		cld
 1:		mov $msdos_str,%di		# Look for MS DOS partitions
 		push %cx
 		push %si
 		mov $0x8,%cx
-		rep cmpsb 
+		rep cmpsb
 		pop %si
 		pop %cx
 		je 2f
@@ -599,7 +824,7 @@ ho_blk:		mov $home_block+8,%si		# Process ho block
 	pad
 		loop 1b
 		pop %di
-		ret 
+		ret
 
 2:		pop %di
 		add $0x14,%si
@@ -617,27 +842,40 @@ ho_blk:		mov $home_block+8,%si		# Process ho block
 		add $0x4,%si
 	pad
 		loop 1b
-		ret 
+		ret
 
-decode_part:	test %ax,%ax		#4f0
+	#
+	# %cx Has the number of reserved sectors in this partition
+	# %ax has the number of data sectors in this partition
+	# %di points to the bpb we're filling in.
+	#
+	# Note: we have a maximum size of 32MB (2^16 blocks) and
+	# we report to DOS the number of 'reserved' sectors as just
+	# the effective starting point for this partition.
+	#
+decode_part:	test %ax,%ax
 		jz 2f
-		mov %cx,0x3(%di)
+		mov %cx,bpb_rsvd(%di)
 	pad
 		add %ax,%cx
-		mov %cx,0x8(%di)
+		mov %cx,bpb_logsec(%di)
 	pad
+	# Compute how many FAT sectors we'll need for all
+	# these sectors.
+	# (Sectors * 24 + 1) / 2^16 == # FAT sectors
+	# with a minimum of 9
 		mov $0x18,%cx
 		mul %cx
 		addw $0xffff,%ax
 		adc $0x0,%dx
 		cmp $0x9,%dx
 		jna 1f
-		mov %dx,0xb(%di)
+		mov %dx,bpb_fat_sec(%di)
 	pad
-1:		add $0xd,%di
+1:		add $bpb_len,%di
 	pad
 		incb num_parts
-2:		ret 
+2:		ret
 	# Literal string we look for in the home block
 msdos_str:	.ascii "MSDOS   "
 num_parts:	.byte 0x00
@@ -1235,10 +1473,10 @@ code_000010ee:	add %dh,0x10(%bp,%si)
 		sub %si,%cx
 		push %es
 		pop %ds
-		rep movsb 
+		rep movsb
 		pop %ds
 		pop %si
-		ret 
+		ret
 data_00001104:	.byte 0xbe
 data_00001105:	.byte 0x95
 data_00001106:	.byte 0x28
@@ -1382,8 +1620,8 @@ data_0000118f:	.byte 0xeb
 data_00001190:	.byte 0x02
 code_00001191:	xor %al,%al
 		mov $0x100,%cx
-		repne scasb 
-		ret 
+		repne scasb
+		ret
 data_00001199:	.byte 0x3c
 data_0000119a:	.byte 0x61
 data_0000119b:	.byte 0x72
@@ -1474,7 +1712,7 @@ code_000011e8:	push %es
 		mov %ax,%cx
 		pop %ax
 		pop %es
-		ret 
+		ret
 data_000011fc:	.byte 0xb4
 data_000011fd:	.byte 0x19
 data_000011fe:	.byte 0xcd
