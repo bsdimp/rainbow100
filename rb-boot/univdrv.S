@@ -6,7 +6,27 @@
 # The patch script reads in sectors 20-39, then splats this into offset
 # 0x980 and then patches some other stuff to create a diskette that will
 # quickly boot off of the hard drive.
+
+# nuniv211.bin				Set univ211.bin to read in
+# l					Load this file at cs:0x100
+# lcs:800 0 20 20			Read in sector 32 through 64 [*]
+# mcs:100L580 cs:1180			Deposit 580H(1408) bytes at offset 980H in blocks read
+# ecs:86c
+# 20 87 09 92				Drop 4 bytes at offset 6c into track2 sector 1 off 6c
+# ecs:2c84
+# 90 90 90 90 90 90 90 e8 f2 e4		NOPs and jump at 2484 of buffer (track 3 sector 1 off 84)
+# wcs:800 0 20 20			Write it out
+# q
 #
+# So what happens to "F80" and higher? There's code there that's represented at the moment
+# by bytes...
+# [*] This just happens to be IO.SYS
+# since on an RX-50 FORMAT/S puts IO.SYS in the first sectors after the directory which
+# land here
+# So... time to get/find the BIOS sources that are out there for the 2.11 BIOS to see whta
+# gets stomped to make this happen...
+#
+
 # Note: it appears that the disk(s) are attached via a SCSI-1 cable that
 # uses a subset of the pins (devices can't assert unit attention). This is
 # late SASI/Early SCSI 1. We send SCSI CCBs, but don't seem to be doing the
@@ -30,14 +50,18 @@
 	# This seems to be a status / ISR port
 	.set	in71, 0x71
 	.set	out71, 0x71
+	.set	p71_bit0, 0x01
+	.set	p71_bit1, 0x02
+	.set	p71_bit3, 0x08
+	.set	p71_bit4, 0x10
 	# unsure
-	.set	in72, 0x72
+	# no input?
 	.set	out72, 0x72
 
 	# SCSI op codes
 	.set OP_READ, 0x8
 	.set OP_WRITE, 0xa
-	
+
 	.code16
         .arch   i8086           # Note: need binutils as clang8 can't cope
 u_start:	jmp u_init
@@ -159,42 +183,53 @@ curr_part:	.byte 0x00
 curr_op:	.byte 0x00
 last_status:	.byte 0x00
 xferd:		.word 0
-data_00000ac3:	.byte 0x00
+curr_direction:	.byte 0x00
 curr_lun:	.byte 0x00		# shifted left 4 for easy encoding
-curr_cdb:	.byte 0x00
-data_00000ac6:	.byte 0x00
-data_00000ac7:	.byte 0x00
-data_00000ac8:	.byte 0x00
-data_00000ac9:	.byte 0x00
-curr_cylinder:	.word 0
-data_00000acc:	.byte 0x00
-data_00000acd:	.byte 0x00
-data_00000ace:	.byte 0x00
-data_00000acf:	.byte 0x00
-data_00000ad0:	.byte 0x00
-data_00000ad1:	.byte 0x03
-data_00000ad2:	.byte 0x00
-data_00000ad3:	.byte 0x00
-data_00000ad4:	.byte 0x00
-data_00000ad5:	.byte 0x04
-data_00000ad6:	.byte 0x00
-scsi_cdb:	.byte 0x00
-data_00000ad8:	.byte 0x00
-data_00000ad9:	.byte 0x00
-data_00000ada:	.byte 0x00
-data_00000adb:	.byte 0x01
-data_00000adc:	.byte 0x00
-data_00000add:	.byte 0x0f
-data_00000ade:	.byte 0x00
-data_00000adf:	.byte 0x00
-data_00000ae0:	.byte 0x00
-data_00000ae1:	.byte 0x00
-data_00000ae2:	.byte 0x00
-		.ascii "INPUT"
+
+sense_buf:		# SENSE BUFFER for REQUEST SENSE
+	.byte 0		# Error byte: AdValid:1 | ErrClass:3 |ErrCode:4
+	.byte 0		# Vendor:3 | LBA:5 (MSB)
+	.byte 0		# LBA
+	.byte 0		# LBA (LSB)
+
+curr_ac9:		# Some kind of response buffer??? unsure how this is used.
+	.byte 0x00
+curr_cylinder:
+	.word 0
+curr_side:
+	.byte 0x00
+	.byte 0x00
+	.byte 0x00
+curr_offset:
+	.word 0
+cdb_sense:
+	.byte 0x03	# REQUEST SENSE op
+	.byte 0x00
+	.byte 0x00
+	.byte 0x00
+	.byte 0x04	# Allocation Length (sense buffer size)
+	.byte 0x00
+scsi_cdb:
+	.byte 0x00
+	.byte 0x00
+	.byte 0x00
+	.byte 0x00
+	.byte 0x01
+	.byte 0x00
+buff_add:
+	.byte 0x0f
+	.byte 0x00
+	.byte 0x00
+	.byte 0x00
+	.byte 0x00
+	.byte 0x00
+
+	.ascii "INPUT"
 u_read:		movb $OP_READ,curr_op		# READ OPCODE
 		jmp 1f
 	pad
-		.ascii "OUTPUT"
+
+	.ascii "OUTPUT"
 u_write:	movb $OP_WRITE,curr_op		# WRITE opcode
 1:		cmp curr_part,%al
 		mov $0x0,%al
@@ -233,16 +268,16 @@ print_error:	call puts_immed
 		call puthex
 		call puts_immed
 	.asciz "\r\nError  code = "
-		mov curr_cdb,%al	# 0x219
+		mov sense_buf,%al	# 0x219
 		and $0x7f,%al
 		call puthex
-		mov curr_cdb,%al
+		mov sense_buf,%al
 		test $0x80,%al		# 0x224
 		jz 9f
-		mov $0xadd,%bx
-		mov 0xac7,%ax
+		mov $buff_add,%bx
+		mov sense_buf+2,%ax
 		mov %ax,0x2(%bx)
-		mov $0xac9,%di
+		mov $curr_ac9,%di
 		mov %ds,%ax
 		mov %ax,%es
 		call do_xxx_xfer
@@ -253,8 +288,7 @@ print_error:	call puts_immed
 		call putdec
 		call puts_immed
 	.asciz ", side="
-# 25c		
-		movb 0xacc, %al
+		movb curr_side, %al
 		mov $0x0, %ah
 		call putdec
 		call puts_immed
@@ -320,26 +354,28 @@ putchar:	mov %al,%cl
 		pop %bx
 		ret 
 
+	# %bx is cdb
+	# %di is buffer
 do_xxx_xfer:	push %bx
 		push %di
 		call claim_bus
 		call xfer_cdb
 		mov %ax,xferd		# number of bytes xfer'd
-		call wait_71_bit1
+		call wait_71_bit0
 		in $in71,%al
-		test $0x8,%al
+		test $p71_bit3,%al
 		mov $0x0,%ax
 		jnz 2f			# jump if 71_bit8 is set
 		mov %di,%bx	#2fa
 		in $in71,%al		# if bit 0x10 set, don't xfer from card..
-		test $0x10,%al
+		test $p71_bit4,%al
 		jz 1f
 		call read_from_card
-		movb $0x1,0xac3
+		movb $0x1,curr_direction
 		jmp 2f
 	pad
 1:		call write_to_card
-		movb $0x0,0xac3
+		movb $0x0,curr_direction
 2:		push %ax
 		call wait_not_busy
 		mov %al,last_status
@@ -350,10 +386,10 @@ do_xxx_xfer:	push %bx
 		jz 1f
 		push %ax
 		call claim_bus
-		mov $0xad1,%bx
+		mov $cdb_sense,%bx
 		call xfer_cdb
-		call wait_71_bit1
-		mov $curr_cdb,%bx
+		call wait_71_bit0
+		mov $sense_buf,%bx
 		push %es
 		mov %ds,%ax
 		mov %ax,%es
@@ -364,47 +400,51 @@ do_xxx_xfer:	push %bx
 1:		ret 
 
 claim_bus:	in $in71,%al
-		test $0x2,%al
+		test $p71_bit1,%al
 		jnz claim_bus
 		mov $0x1,%al
 		out %al,$out70
 		mov $0x1,%al
 		out %al,$out72
 1:		in $in71,%al
-		test $0x2,%al
+		test $p71_bit1,%al
 		jz 1b
 		sub %al,%al		#355
 		out %al,$out72
 		ret 
 # 35a
+	# I think %bx points to the cdb/bytes to send to card
 xfer_cdb:	push %bx
 		mov 0x1(%bx),%al
 		and $0x1f,%al
 		or curr_lun,%al
 		mov %al,0x1(%bx)
 1:		in $in71,%al
-		test $0x1,%al
+		test $p71_bit0,%al
 		jz 1b
-		test $0x8,%al		# some if not set
+		test $p71_bit3,%al	# some if not set
 		jz ret_xferd
-		test $0x10,%al		# some other error if set
+		test $p71_bit4,%al	# some other error if set
 		jnz ret_xferd
 		mov (%bx),%al
 		out %al,$out70		# Write CDB byte
 		inc %bx
 		jmp 1b
-read_from_card:	push %bx
+
+	# and %di points to the data buffer
+read_from_card:
+		push %bx
 		push %dx
-		mov $0x1,%dh
-		mov $0x9,%dl
+		mov $p71_bit0,%dh
+		mov $(p71_bit0 | p71_bit3),%dl
 		xchg %di,%bx
 	# Loop until the next data is read
 	# and read it in (4 bytes at a time)
 	# or get out if no more data to transfer
 1:		in $in71,%al
-		test $0x1,%al
+		test $p71_bit0,%al
 		jz 1b			# Wait for bit1 to turn on
-		test $0x8,%al
+		test $p71_bit3,%al
 		jnz rfc_done		# bit 8 set -> we're done
 2:		in $in70,%al		# Transfer out 4 bytes of card's buffer to host buffer
 		stosb 
@@ -415,8 +455,8 @@ read_from_card:	push %bx
 		in $in70,%al
 		stosb 
 		in $in71,%al
-		and %dl,%al		# Bits 0x8 and 0x1
-		cmp %dh,%al		# only bit 8 set
+		and %dl,%al		# Bits 0 and 3
+		cmp %dh,%al		# only bit 3 set
 		jz 2b
 		jmp 1b
 rfc_done:	xchg %bx,%di
@@ -428,12 +468,12 @@ write_to_card:	push %bx
 		push %ds
 		push %es
 		pop %ds
-		mov $0x1,%dh
-		mov $0x9,%dl
+		mov $p71_bit0,%dh
+		mov $(p71_bit0 | p71_bit3),%dl
 		xchg %si,%bx
 
 1:		in $in71,%al
-		test $0x1,%al
+		test $p71_bit0,%al
 		jz 1b			# Wait for bit1 to turn on
 		test $0x8,%al		# Bit 8 set -> we're done?
 		jnz wtc_done
@@ -452,21 +492,21 @@ ret_xferd:	mov %bx,%ax			# Return number of bytes transferred
 		pop %bx
 		sub %bx,%ax
 		ret 
-wait_not_busy:	call wait_71_bit1		# Or maybe getbus status?
+wait_not_busy:	call wait_71_bit0		# Or maybe getbus status?
 		in $in70,%al
 		mov %al,%ah
-		call wait_71_bit1
+		call wait_71_bit0
 		in $in70,%al
 		mov %ah,%al
-		test $0x8,%al			# 70 Bit 8 means error?
+		test $p71_bit3,%al			# 70 Bit 3 means error????
 		jz 1f
 		stc 
 		ret 
 1:		test %al,%al
 		ret 
-wait_71_bit1:	in $in71,%al
-		test $0x1,%al
-		jz wait_71_bit1
+wait_71_bit0:	in $in71,%al
+		test $p71_bit0,%al
+		jz wait_71_bit0
 		ret 
 u_drv_init:	mov num_parts,%al
 		lds %cs:u_pkt,%bx
@@ -529,12 +569,12 @@ read_hom:	push %di		# Name unsure...
 	# older and allows only one.
 1:		cmpw $0x6968,home_block		# Look for hi block 1
 		jnz 1f
-		mov 0xea6,%ax			# Process hi block
-		add 0xea8,%ax
+		mov (home_block+2),%ax			# Process hi block
+		add (home_block+4),%ax
 		mov $0x24,%cx
 		mul %cx
 		push %ax
-		mov 0xeaa,%ax
+		mov (home_block+6),%ax
 		mov $0x24,%cx
 		mul %cx
 		pop %cx
@@ -543,7 +583,7 @@ read_hom:	push %di		# Name unsure...
 1:		cmpw $0x6f68,home_block		# Look for ho in block 1
 		jz ho_blk
 		ret 
-ho_blk:		mov $home_part_start,%si	# Process ho block
+ho_blk:		mov $home_block+8,%si		# Process ho block
 		mov $0x8,%cx			# up to 8 partitions
 		push %di
 		cld 
@@ -609,7 +649,7 @@ data_00000ea8:	.byte 0x00
 data_00000ea9:	.byte 0x00
 data_00000eaa:	.byte 0x00
 data_00000eab:	.byte 0x00
-home_part_start:	.byte 0x00
+	.byte 0x00
 data_00000ead:	.byte 0x00
 data_00000eae:	.byte 0x00
 data_00000eaf:	.byte 0x00
