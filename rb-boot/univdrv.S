@@ -75,9 +75,26 @@
 	.set OP_READ, 0x8
 	.set OP_WRITE, 0xa
 
+	# MS-DOS request packet defines
+	.set rp_len, 0
+	.set rp_unit, 1
+	.set rp_cmd, 2
+	.set rp_status, 3
+	.set rp_media_ret, 14
+	.set rp_rw_media, 13
+	.set rp_rw_buffer, 14
+	.set rp_rw_count, 18
+	.set rp_rw_lba, 20
+	.set rp_bbpb_off, 18
+	.set rp_bbpb_seg, 20
+
+	.set err_unknown, 0x3
+	.set err_write_fault, 0xa
+	.set err_read_fault, 0xb
+
 	.code16
         .arch   i8086           # Note: need binutils as clang8 can't cope
-u_start:	jmp u_init
+start:		jmp u_init
 u_pkt:
 u_pkt_off:	.word 0x00
 u_pkt_seg:	.word 0x00
@@ -97,17 +114,17 @@ u_interrupt:	push	%si
 		push	%bx
 # ds:bx is our packet from DOS
 		lds	%cs:u_pkt,%bx
-		mov	0x2(%bx),%al
+		mov	rp_cmd(%bx),%al
 		cmp	$0xb,%al
 		ja	badcmd
 		cbw
 		shl	$0x1,%ax
 		mov	%ax,%si
-		mov	0x1(%bx),%al		# %al = Unit
-		mov	0xd(%bx),%ah		# %ah = media byte
-		mov	0x12(%bx),%cx		# %cx = sector count
-		mov	0x14(%bx),%dx		# %ds = lba
-		les	0xe(%bx),%di		# %es:%di = transfer address
+		mov	rp_unit(%bx),%al	# %al = Unit
+		mov	rp_rw_media(%bx),%ah	# %ah = media byte
+		mov	rp_rw_count(%bx),%cx	# %cx = sector count
+		mov	rp_rw_lba(%bx),%dx	# %ds = lba
+		les	rp_rw_buffer(%bx),%di	# %es:%di = transfer address
 		push	%cs
 		pop	%ds
 		jmp	*u_req_sw(%si)
@@ -127,14 +144,14 @@ u_req_sw:	.word u_drv_init		# init
 		.word u_done			# output flush -- u_done
 		.word badcmd			# ioctl -- bad command
 
-badcmd:		mov	$0x3,%al
+badcmd:		mov	$err_unknown,%al
 errout:		mov	$0x81,%ah
 		lds	%cs:u_pkt,%bx
-		movw	$0x0,0x12(%bx)
+		movw	$0x0,rp_rw_count(%bx)
 		jmp	1f
 u_done:		mov	$0x1,%ah		# request done
 1:		lds	%cs:u_pkt,%bx
-		mov	%ax,0x3(%bx)		# Store result in packet
+		mov	%ax,rp_status(%bx)	# Store result in packet
 		pop	%bx
 		pop	%es
 		pop	%ds
@@ -148,7 +165,7 @@ u_done:		mov	$0x1,%ah		# request done
 
 	.ascii "media check"
 u_media_check:	lds %cs:u_pkt,%bx
-		movb $0x1,0xe(%bx)
+		movb $0x1,rp_media_ret(%bx)
 		jmp u_done
 
 	.ascii	"build bpb"
@@ -157,8 +174,8 @@ u_build_bpb:	cbw
 		mov %ax,%bx
 		mov bpb_ptr(%bx),%di
 		lds %cs:u_pkt,%bx
-		mov %di,0x12(%bx)
-		mov %cs,0x14(%bx)
+		mov %di,rp_bbpb_off(%bx)
+		mov %cs,rp_bbpb_seg(%bx)
 		jmp u_done
 
 	.ascii "BIOS param. block "
@@ -200,7 +217,7 @@ bpb_ptr: .word bpbs		# 0xaae
 	.word bpbs + 5 * bpb_len
 	.word bpbs + 6 * bpb_len
 	.word bpbs + 7 * bpb_len
-curr_part:	.byte 0x00
+lun0_parts:	.byte 0x00
 curr_op:	.byte 0x00
 last_status:	.byte 0x00
 xferd:		.word 0
@@ -252,25 +269,25 @@ u_read:		movb $OP_READ,curr_op		# READ OPCODE
 
 	.ascii "OUTPUT"
 u_write:	movb $OP_WRITE,curr_op		# WRITE opcode
-1:		cmp curr_part,%al
+1:		cmp lun0_parts,%al
 		mov $0x0,%al
 		jc 1f
 		mov $0x20,%al
 1:		mov %al,curr_lun
 		mov $scsi_cdb,%bx
 		mov curr_op,%al
-		mov %al,(%bx)
+		mov %al,(%bx)			# Store OP_WRITE (0xa)
 		xchg %dh,%dl
-		mov %dx,0x2(%bx)
-		mov %cl,0x4(%bx)
+		mov %dx,0x2(%bx)		# LBA (bottom 16 bits)
+		mov %cl,0x4(%bx)		# Count
 		call do_xxx_xfer
 		testb $0xff,last_status
 		jz 2f
 		call print_error
-		mov $0xb,%al
+		mov $err_read_fault,%al
 		cmpb $OP_READ,curr_op
 		je 1f
-		mov $0xa,%al
+		mov $err_write_fault,%al
 1:		jmp errout
 2:		jmp u_done
 print_error:	call puts_immed
@@ -572,7 +589,7 @@ u_drv_init:	mov num_parts,%al
 		jmp u_done
 
 	# Store 0xe000 into 0x4000:0 to 0xdfff:f.
-	# Older versions of DOS (maybe the firmware too) didn't initialize this
+	# Older versions of DOS (Rainbow BIOS too?) didn't initialize this
 	# memory, leading to problems. Since this HBA is piggy backed on the
 	# memory board, this is a workaround for that issue.
 u_init:		mov $0xe000,%ax
@@ -608,10 +625,12 @@ u_init:		mov $0xe000,%ax
 		sub $0xff,%al
 		jz 2f
 1:		mov $bpbs,%di
+	# Try LUN0 first
 		movb $0x0,curr_lun
 		call read_hom
 		mov num_parts,%al	# Look at the latest partition
-		mov %al,curr_part
+		mov %al,lun0_parts
+	# Then LUN1...
 		movb $0x20,curr_lun
 		call read_hom
 2:		mov num_parts,%al
@@ -802,7 +821,7 @@ read_hom:	push %di
 #
 # So, CP/M starts at sector 1, end at sector 35 (and then there's 3 more that start
 # at 36, but have 0 length so are ignored). This is too small for a real CP/M partition.
-#	
+#
 # MSDOS partition: starts at sector 36 ends at sector 21996+36-1 which is past the end
 # of the media, suggesting the 611 number was in error and this partition was too big
 # but nobody ever noticed. It seems to have about 5MB of data on it.
