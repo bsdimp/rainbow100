@@ -18,14 +18,15 @@
 # wcs:800 0 20 20			Write it out
 # q
 #
-# So what happens to "F80" and higher? There's code there that's represented at the moment
-# by bytes...
-# [*] This just happens to be IO.SYS
-# since on an RX-50 FORMAT/S puts IO.SYS in the first sectors after the directory which
-# land here
+# 0xf80 and higher (we copy from offset 0x980 to 0xf00 in IO.SYS) is preserved verbatim.
+# It's isn't at all clear what this is for, where it's intended to load, etc.
+#
+# [*] This just happens to be IO.SYS since on an RX-50 FORMAT/S puts IO.SYS in the first
+# sectors after the directory which land here.
 # So... time to get/find the BIOS sources that are out there for the 2.11 BIOS to see whta
 # gets stomped to make this happen...
 #
+
 
 # Note: it appears that the disk(s) are attached via a SCSI-1 cable that
 # uses a subset of the pins (devices can't assert unit attention). This is
@@ -47,33 +48,31 @@
 	# These seem to be a general data port
 	# Port 71 is twiddled and/or we wait for bits to be set
 	# and then we transfer data to/from this port.
-	.set	in70, 0x70
-	.set	out70, 0x70
+	.set	sasi_data_r, 0x70
+	.set	sasi_data_w, 0x70
 
 	# This seems to be a status / ISR port.
 	# There's only 1 write of port 71, and that's whatever bits
 	# are set on startup when bit1 (0x2) is set.
-	.set	in71, 0x71
-	.set	out71, 0x71
-	.set	p71_bit0, 0x01
-	.set	p71_BUS_IDLE, 0x02
-	# bit 2 appears unused
-	.set	p71_bit3, 0x08
-	.set	p71_bit4, 0x10
-	# bit 5 appears unused
-	# bit 6 appears unused
-	# bit 7 appears unused
+	.set	sasi_status, 0x71
+	.set	sasi_status_req, 0x01
+	.set	sasi_status_bsy, 0x02
+	.set	sasi_status_msg, 0x04	# Unused in this driver...
+	.set	sasi_status_cd, 0x08	# 1 control, 0 data
+	.set	sasi_status_io, 0x10	# 1 input, 0 output
+	# bit 5 appears unused -- unwired in xebec reference design
+	# bit 6 appears unused -- unwired in xebec reference design
+	# bit 7 appears unused -- unwired in xebec reference design
+	.set	sasi_bus_reset, 0x71	# Writes toggle ~RST
 
-	# Two values are written to port 72.
-	# 1 is written I think to assert control over the
-	# bus (or maybe to start a new transaction /
-	# reset the old one).
-	# 0 is written when bit0 of port 71 goes low.
-	.set	out72, 0x72
+	# Toggle ~SEL line
+	.set	sasi_bus_select, 0x72
 
 	# SCSI op codes
+	.set OP_REQUEST_SENSE, 0x3
 	.set OP_READ, 0x8
 	.set OP_WRITE, 0xa
+	.set OP_TRANSLATE, 0xf
 
 	# MS-DOS request packet defines
 	.set rp_len, 0
@@ -241,7 +240,7 @@ curr_side:
 curr_offset:
 	.word 0
 cdb_sense:
-	.byte 0x03	# REQUEST SENSE op
+	.byte OP_REQUEST_SENSE	# REQUEST SENSE op
 	.byte 0x00
 	.byte 0x00
 	.byte 0x00
@@ -252,13 +251,13 @@ scsi_cdb:
 	.byte 0x00
 	.byte 0x00
 	.byte 0x00
-	.byte 0x01
+	.byte 0x01	# number of sectors to read
 	.byte 0x00
-buff_add:
-	.byte 0x0f
-	.byte 0x00
-	.byte 0x00
-	.byte 0x00
+translate_cdb:
+	.byte OP_TRANSLATE # Translate opcode from ACB-4000A manual
+	.byte 0x00	# To translate LBA to CHS
+	.byte 0x00	# Used in error reporting only
+	.byte 0x00	# Non-standard command
 	.byte 0x00
 	.byte 0x00
 
@@ -312,7 +311,7 @@ print_error:	call puts_immed
 		mov sense_buf,%al
 		test $0x80,%al		# 0x224
 		jz 9f
-		mov $buff_add,%bx
+		mov $translate_cdb,%bx
 		mov sense_buf+2,%ax
 		mov %ax,0x2(%bx)
 		mov $curr_ac9,%di
@@ -400,13 +399,13 @@ do_xxx_xfer:	push %bx
 		call xfer_cdb
 		mov %ax,xferd		# number of bytes xfer'd
 		call wait_71_bit0
-		in $in71,%al
-		test $p71_bit3,%al
+		in $sasi_status,%al
+		test $sasi_status_cd,%al
 		mov $0x0,%ax
 		jnz 2f			# jump if 71_bit8 is set
 		mov %di,%bx	#2fa
-		in $in71,%al		# if bit 0x10 set, don't xfer from card..
-		test $p71_bit4,%al
+		in $sasi_status,%al		# if bit 0x10 set, don't xfer from card..
+		test $sasi_status_io,%al
 		jz 1f
 		call read_from_card
 		movb $0x1,curr_direction
@@ -437,18 +436,18 @@ do_xxx_xfer:	push %bx
 		pop %ax
 1:		ret
 
-claim_bus:	in $in71,%al
-		test $p71_BUS_IDLE,%al
+claim_bus:	in $sasi_status,%al
+		test $sasi_status_bsy,%al
 		jnz claim_bus
 		mov $0x1,%al
-		out %al,$out70
+		out %al,$sasi_data_w
 		mov $0x1,%al
-		out %al,$out72
-1:		in $in71,%al
-		test $p71_BUS_IDLE,%al
+		out %al,$sasi_bus_select
+1:		in $sasi_status,%al
+		test $sasi_status_bsy,%al
 		jz 1b
 		sub %al,%al
-		out %al,$out72
+		out %al,$sasi_bus_select
 		ret
 # 35a
 	# I think %bx points to the cdb/bytes to send to card
@@ -457,15 +456,15 @@ xfer_cdb:	push %bx
 		and $0x1f,%al
 		or curr_lun,%al
 		mov %al,0x1(%bx)
-1:		in $in71,%al
-		test $p71_bit0,%al
+1:		in $sasi_status,%al
+		test $sasi_status_req,%al
 		jz 1b
-		test $p71_bit3,%al	# some if not set
+		test $sasi_status_cd,%al	# some if not set
 		jz ret_xferd
-		test $p71_bit4,%al	# some other error if set
+		test $sasi_status_io,%al	# some other error if set
 		jnz ret_xferd
 		mov (%bx),%al
-		out %al,$out70		# Write CDB byte
+		out %al,$sasi_data_w		# Write CDB byte
 		inc %bx
 		jmp 1b
 
@@ -473,26 +472,26 @@ xfer_cdb:	push %bx
 read_from_card:
 		push %bx
 		push %dx
-		mov $p71_bit0,%dh
-		mov $(p71_bit0 | p71_bit3),%dl
+		mov $sasi_status_req,%dh
+		mov $(sasi_status_req | sasi_status_cd),%dl
 		xchg %di,%bx
 	# Loop until the next data is read
 	# and read it in (4 bytes at a time)
 	# or get out if no more data to transfer
-1:		in $in71,%al
-		test $p71_bit0,%al
+1:		in $sasi_status,%al
+		test $sasi_status_req,%al
 		jz 1b			# Wait for bit1 to turn on
-		test $p71_bit3,%al
+		test $sasi_status_cd,%al
 		jnz rfc_done		# bit 8 set -> we're done
-2:		in $in70,%al		# Transfer out 4 bytes of card's buffer to host buffer
+2:		in $sasi_data_r,%al		# Transfer out 4 bytes of card's buffer to host buffer
 		stosb
-		in $in70,%al
+		in $sasi_data_r,%al
 		stosb
-		in $in70,%al
+		in $sasi_data_r,%al
 		stosb
-		in $in70,%al
+		in $sasi_data_r,%al
 		stosb
-		in $in71,%al
+		in $sasi_status,%al
 		and %dl,%al		# Bits 0 and 3
 		cmp %dh,%al		# only bit 3 set
 		jz 2b
@@ -506,18 +505,18 @@ write_to_card:	push %bx
 		push %ds
 		push %es
 		pop %ds
-		mov $p71_bit0,%dh
-		mov $(p71_bit0 | p71_bit3),%dl
+		mov $sasi_status_req,%dh
+		mov $(sasi_status_req | sasi_status_cd),%dl
 		xchg %si,%bx
 
-1:		in $in71,%al
-		test $p71_bit0,%al
+1:		in $sasi_status,%al
+		test $sasi_status_req,%al
 		jz 1b			# Wait for bit1 to turn on
 		test $0x8,%al		# Bit 8 set -> we're done?
 		jnz wtc_done
 2:		lodsb
-		out %al,$out70
-		in $in71,%al
+		out %al,$sasi_data_w
+		in $sasi_status,%al
 		and %dl,%al		# mask out all but 8 bit and 1 bit
 		cmp %dh,%al		# if 8 set and 1 clear, get more data to send
 		jz 2b
@@ -563,20 +562,20 @@ ret_xferd:	mov %bx,%ax			# Return number of bytes transferred
 	# to do_xxx_xfer, though... is that a retry?
 	# 0 causes us to do nothing...
 wait_not_busy:	call wait_71_bit0		# Or maybe get bus status?
-		in $in70,%al
+		in $sasi_data_r,%al
 		mov %al,%ah
 		call wait_71_bit0
-		in $in70,%al
+		in $sasi_data_r,%al
 		mov %ah,%al
-		test $0x8,%al			# 70 Bit 3 means error???? Or is that a status coming back.
+		test $0x8,%al			# Bit 3 means 'BUSY' for the disks we care about
 		jz 1f
 		stc
 		ret
 1:		test %al,%al
 		ret
 	# Waits for bit 0 (0x1) of port 71 to turn on
-wait_71_bit0:	in $in71,%al
-		test $p71_bit0,%al
+wait_71_bit0:	in $sasi_status,%al
+		test $sasi_status_req,%al
 		jz wait_71_bit0
 		ret
 u_drv_init:	mov num_parts,%al
@@ -607,8 +606,9 @@ u_init:		mov $0xe000,%ax
 	# Sanity check the HBA to see if it's there. We look at what appears
 	# to be the 'BUS BUSY' bit (though maybe it's an initiator busy bit)
 	# and if it's clear, we assume life is good. Then we write the value
-	# back and re-read. Maybe writing clears the bits (a common design)
-	# but we do it no-where else. We re-read and if it is still 'ff' then
+	# back and re-read. The Xebec reference design toggle the ~RST line
+	# of the SASI bus. Resetting the bus should change what's driven
+	# on the bus. We re-read and if it is still 'ff' then
 	# we'll exit without setting up the BPB array. Otherwise, we proceed
 	# to reading in and parsing the 'hi' or 'ho' block defining Univation's
 	# partioning scheme.
@@ -617,13 +617,13 @@ u_init:		mov $0xe000,%ax
 	# LUN 1 (which is encoded in the CDB as 0x20). Note that they don't
 	# walk through the list of all possible SCSI IDs here.
 	#
-		in $in71,%al
-		test $p71_BUS_IDLE,%al
+		in $sasi_status,%al
+		test $sasi_status_bsy,%al
 		jz 1f
-		out %al,$out71
-		in $in71,%al
+		out %al,$sasi_bus_reset	# Any write will toggle the ~RST line
+		in $sasi_status,%al
 		sub $0xff,%al
-		jz 2f
+		jz 2f			# 0xff means no device decoding
 1:		mov $bpbs,%di
 	# Try LUN0 first
 		movb $0x0,curr_lun
