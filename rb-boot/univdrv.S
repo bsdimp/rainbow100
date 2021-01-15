@@ -229,16 +229,17 @@ sense_buf:		# SENSE BUFFER for REQUEST SENSE
 	.byte 0		# LBA
 	.byte 0		# LBA (LSB)
 
-curr_ac9:		# Some kind of response buffer??? unsure how this is used.
-	.byte 0x00
-curr_cylinder:
-	.word 0
+# Data returned from TRANSLATE CDB
+xlate_rsp:		# (pg 5-18 Adaptec 400003-00A)
+	.byte 0x00	# MSB cylinder (always 0 for us)
+curr_cylinder:		# Cylinder
+	.word 0		# Cylinder LSB
 curr_side:
-	.byte 0x00
-	.byte 0x00
-	.byte 0x00
+	.byte 0x00	# Head number
+	.byte 0x00	# Index MSB (also zeros for us)
+	.byte 0x00	# Index
 curr_offset:
-	.word 0
+	.word 0		# index / index lsb
 cdb_sense:
 	.byte OP_REQUEST_SENSE	# REQUEST SENSE op
 	.byte 0x00
@@ -247,18 +248,18 @@ cdb_sense:
 	.byte 0x04	# Allocation Length (sense buffer size)
 	.byte 0x00
 scsi_cdb:
-	.byte 0x00
-	.byte 0x00
-	.byte 0x00
-	.byte 0x00
+	.byte 0x00	# Read or write
+	.byte 0x00	# LUN + MSB LBA
+	.byte 0x00	# LBA
+	.byte 0x00	# LBA LSB
 	.byte 0x01	# number of sectors to read
-	.byte 0x00
+	.byte 0x00	# Control
 translate_cdb:
 	.byte OP_TRANSLATE # Translate opcode from ACB-4000A manual
 	.byte 0x00	# To translate LBA to CHS
 	.byte 0x00	# Used in error reporting only
 	.byte 0x00	# Non-standard command
-	.byte 0x00
+	.byte 0x00	# Same format as READ/WRITE CDB
 	.byte 0x00
 
 	.ascii "INPUT"
@@ -314,7 +315,7 @@ print_error:	call puts_immed
 		mov $translate_cdb,%bx
 		mov sense_buf+2,%ax
 		mov %ax,0x2(%bx)
-		mov $curr_ac9,%di
+		mov $xlate_rsp,%di
 		mov %ds,%ax
 		mov %ax,%es
 		call do_xxx_xfer
@@ -330,7 +331,7 @@ print_error:	call puts_immed
 		call putdec
 		call puts_immed
 	.asciz ", offset="
-		mov 0xacf, %ax
+		mov curr_offset, %ax
 		xchg %al, %ah
 		call putdec
 9:		call puts_immed
@@ -441,7 +442,7 @@ claim_bus:	in $sasi_status,%al
 		jnz claim_bus
 		mov $0x1,%al
 		out %al,$sasi_data_w
-		mov $0x1,%al
+		mov $0x1,%al			# Note for SCSI, this needs to be level not a pulse
 		out %al,$sasi_bus_select
 1:		in $sasi_status,%al
 		test $sasi_status_bsy,%al
