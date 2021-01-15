@@ -398,7 +398,7 @@ do_xxx_xfer:	push %bx
 		call claim_bus
 		call xfer_cdb
 		mov %ax,xferd		# number of bytes xfer'd
-		call wait_71_bit0
+		call wait_for_sasi_req
 		in $sasi_status,%al
 		test $sasi_status_cd,%al
 		mov $0x0,%ax
@@ -425,7 +425,7 @@ do_xxx_xfer:	push %bx
 		call claim_bus
 		mov $cdb_sense,%bx
 		call xfer_cdb
-		call wait_71_bit0
+		call wait_for_sasi_req
 		mov $sense_buf,%bx
 		push %es
 		mov %ds,%ax
@@ -561,10 +561,10 @@ ret_xferd:	mov %bx,%ax			# Return number of bytes transferred
 	# So it's either BUSY or RESERVATION CONFLICT, both of which will cause us
 	# to do_xxx_xfer, though... is that a retry?
 	# 0 causes us to do nothing...
-wait_not_busy:	call wait_71_bit0		# Or maybe get bus status?
+wait_not_busy:	call wait_for_sasi_req		# Or maybe get bus status?
 		in $sasi_data_r,%al
 		mov %al,%ah
-		call wait_71_bit0
+		call wait_for_sasi_req
 		in $sasi_data_r,%al
 		mov %ah,%al
 		test $0x8,%al			# Bit 3 means 'BUSY' for the disks we care about
@@ -573,15 +573,18 @@ wait_not_busy:	call wait_71_bit0		# Or maybe get bus status?
 		ret
 1:		test %al,%al
 		ret
-	# Waits for bit 0 (0x1) of port 71 to turn on
-wait_71_bit0:	in $sasi_status,%al
+
+	# Waits for the sasi ~REQ bit to assert itself
+wait_for_sasi_req:
+		in $sasi_status,%al
 		test $sasi_status_req,%al
-		jz wait_71_bit0
+		jz wait_for_sasi_req
 		ret
-u_drv_init:	mov num_parts,%al
+
+u_drv_init:	mov num_units,%al
 		lds %cs:u_pkt,%bx
 		mov %al,0xd(%bx)
-		movw $0xd74,0xe(%bx)
+		movw $u_drv_init,0xe(%bx)
 		mov %cs,0x10(%bx)
 		movw $bpb_ptr,0x12(%bx)
 		mov %cs,0x14(%bx)
@@ -628,12 +631,12 @@ u_init:		mov $0xe000,%ax
 	# Try LUN0 first
 		movb $0x0,curr_lun
 		call read_hom
-		mov num_parts,%al	# Look at the latest partition
+		mov num_units,%al	# Look at the latest partition
 		mov %al,lun0_parts
 	# Then LUN1...
 		movb $0x20,curr_lun
 		call read_hom
-2:		mov num_parts,%al
+2:		mov num_units,%al
 		or %al,%al
 		jz 1f
 		mov %sp,%bp
@@ -893,11 +896,11 @@ decode_part:	test %ax,%ax
 	pad
 1:		add $bpb_len,%di
 	pad
-		incb num_parts
+		incb num_units
 2:		ret
 	# Literal string we look for in the home block
 msdos_str:	.ascii "MSDOS   "
-num_parts:	.byte 0x00
+num_units:	.byte 0x00
 home_block:	.byte 0x00	# 0xea4
 data_00000ea5:	.byte 0x00
 data_00000ea6:	.byte 0x00
