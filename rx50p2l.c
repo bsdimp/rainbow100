@@ -1,6 +1,6 @@
 /*
  * Quick program to read a phyiscal RX-50 dump and turn it into a
- * logical dump that can be used.
+ * logical dump that can be used. -- knows how to fix DOS --
  *
  * Tracks 0 and 1 have no interleave.
  * Tracks 2-79 have an interlave of 2, so the logical tracks are
@@ -84,6 +84,7 @@ int do_cpm = 0;
 uint8_t sec2magic[4] = { 0xfa,			/* cli  -- also the rainbow media ID */
 			 0xe9, 0xd6, 0x00 };	/* jmp .+0xd6 -- start of secondary boot loader */
 uint8_t fat12_start[3] = { RB_MEDIA_ID, 0xff, 0xff };	 /* Standard FAT start */
+uint8_t fat12_startb[3] = { 0xfc, 0xff, 0xff };	 /* Standard FAT start */
 
 
 struct pc_dos_bootsector {
@@ -207,6 +208,8 @@ print_disk_type(int in)
 	read_track(in);				// Track 2
 	if (memcmp(track_buffer, fat12_start, sizeof(fat12_start)) == 0)
 		printf("Found MS-DOS FAT in the right place\n");
+	if (memcmp(track_buffer, fat12_startb, sizeof(fat12_startb)) == 0)
+		printf("Found FC MS-DOS FAT in the right place\n");
 	else if (track_buffer[0] == 0x00 && track_buffer[1] != 0xe5)
 		printf("Possible CP/M directory\n");
 }
@@ -222,7 +225,7 @@ main(int argc, char **argv)
 	out = STDOUT_FILENO;
 	lflag = 1;
 	wflag = 0;
-	while ((ch = getopt(argc, argv, "cdI:i:lo:ps:w")) != -1) {
+	while ((ch = getopt(argc, argv, "cdfI:i:lo:ps:w")) != -1) {
 		switch (ch) {
 		case 'c':
 			do_cpm = 1;
@@ -231,6 +234,9 @@ main(int argc, char **argv)
 		case 'd':
 			do_dos = 1;
 			do_cpm = 0;
+			break;
+		case 'f':
+			dummy_bs.bpb_media = 0xfc;
 			break;
 		case 'i':
 			if (in != STDIN_FILENO)
