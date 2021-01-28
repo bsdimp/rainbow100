@@ -14,6 +14,8 @@
 
 ## Chip layout
 
+Bank 3 | Bank 3 | Bank2 | Bank1&2 | Bank 1
+---- | ---- | ---- | ---- | ----
 E5 | E4 | E3 | E2 | E1
 E13 | E12 | E11 | E10 | E9
 E21 | E20 | E19 | E18 | E17
