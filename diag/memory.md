@@ -1,7 +1,7 @@
 ## Configurations 1 and 2 failure code to chip mapping
 
 1 | 2 | E num
-- | - | -----
+---- | ---- | -----
 20 | 20 30 40 50 | 34
 21 | 21 31 41 51 | 26
 22 | 22 32 42 52 | 41
