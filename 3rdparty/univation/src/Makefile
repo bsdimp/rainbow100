@@ -10,7 +10,7 @@ CLEANFILES+=${PROG}.out
 MK_PIE:= no
 
 # Note: much of this taken from FreeBSD's boot0
-CFLAGS=-m32 -ffreestanding -mno-mmx -mno-sse -msoft-float -march=i386
+CFLAGS=-m32 -ffreestanding -mno-mmx -mno-sse -msoft-float -march=i386 -fno-integrated-as
 LDFLAGS+=${LDFLAGS_BIN}
 # compact binary with no padding between text, data, bss
 LDSCRIPT=	boot.ldscript
