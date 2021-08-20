@@ -1,0 +1,241 @@
+--- old	2021-01-12 13:51:27.405294000 -0700
++++ new	2021-01-12 13:51:27.410174000 -0700
+@@ -1,5 +1,5 @@
+ 
+-univ211.bin:     file format binary
++univdrv:     file format binary
+ 
+ Disassembly of section .data:
+ 
+@@ -25,7 +25,7 @@
+   25:	77 34                	ja     0x5b
+   27:	98                   	cbtw   
+   28:	d1 e0                	shl    %ax
+-  2a:	8b f0                	mov    %ax,%si
++  2a:	89 c6                	mov    %ax,%si
+   2c:	8a 47 01             	mov    0x1(%bx),%al
+   2f:	8a 67 0d             	mov    0xd(%bx),%ah
+   32:	8b 4f 12             	mov    0x12(%bx),%cx
+@@ -74,7 +74,7 @@
+   98:	6c                   	insb   (%dx),%es:(%di)
+   99:	64 20 62 70          	and    %ah,%fs:0x70(%bp,%si)
+   9d:	62 98 d1 e0          	bound  %bx,-0x1f2f(%bx,%si)
+-  a1:	8b d8                	mov    %ax,%bx
++  a1:	89 c3                	mov    %ax,%bx
+   a3:	8b bf ae 0a          	mov    0xaae(%bx),%di
+   a7:	2e c5 1e 83 09       	lds    %cs:0x983,%bx
+   ac:	89 7f 12             	mov    %di,0x12(%bx)
+@@ -280,11 +280,11 @@
+  277:	e8 50 00             	call   0x2ca
+  27a:	0d 0a 00             	or     $0xa,%ax
+  27d:	c3                   	ret    
+- 27e:	8a d8                	mov    %al,%bl
++ 27e:	88 c3                	mov    %al,%bl
+  280:	b1 04                	mov    $0x4,%cl
+  282:	d2 e8                	shr    %cl,%al
+  284:	e8 04 00             	call   0x28b
+- 287:	8a c3                	mov    %bl,%al
++ 287:	88 d8                	mov    %bl,%al
+  289:	24 0f                	and    $0xf,%al
+  28b:	04 30                	add    $0x30,%al
+  28d:	3c 39                	cmp    $0x39,%al
+@@ -303,16 +303,16 @@
+  2ad:	e8 05 00             	call   0x2b5
+  2b0:	b3 01                	mov    $0x1,%bl
+  2b2:	b9 01 00             	mov    $0x1,%cx
+- 2b5:	33 d2                	xor    %dx,%dx
++ 2b5:	31 d2                	xor    %dx,%dx
+  2b7:	f7 f1                	div    %cx
+- 2b9:	02 d8                	add    %al,%bl
++ 2b9:	00 c3                	add    %al,%bl
+  2bb:	04 30                	add    $0x30,%al
+  2bd:	80 fb 00             	cmp    $0x0,%bl
+  2c0:	74 05                	je     0x2c7
+  2c2:	52                   	push   %dx
+  2c3:	e8 14 00             	call   0x2da
+  2c6:	5a                   	pop    %dx
+- 2c7:	8b c2                	mov    %dx,%ax
++ 2c7:	89 d0                	mov    %dx,%ax
+  2c9:	c3                   	ret    
+  2ca:	5b                   	pop    %bx
+  2cb:	2e 8a 07             	mov    %cs:(%bx),%al
+@@ -322,9 +322,9 @@
+  2d3:	ff e3                	jmp    *%bx
+  2d5:	e8 02 00             	call   0x2da
+  2d8:	eb f1                	jmp    0x2cb
+- 2da:	8a c8                	mov    %al,%cl
++ 2da:	88 c1                	mov    %al,%cl
+  2dc:	53                   	push   %bx
+- 2dd:	33 ff                	xor    %di,%di
++ 2dd:	31 ff                	xor    %di,%di
+  2df:	cd 18                	int    $0x18
+  2e1:	5b                   	pop    %bx
+  2e2:	c3                   	ret    
+@@ -338,7 +338,7 @@
+  2f3:	a8 08                	test   $0x8,%al
+  2f5:	b8 00 00             	mov    $0x0,%ax
+  2f8:	75 1b                	jne    0x315
+- 2fa:	8b df                	mov    %di,%bx
++ 2fa:	89 fb                	mov    %di,%bx
+  2fc:	e4 71                	in     $0x71,%al
+  2fe:	a8 10                	test   $0x10,%al
+  300:	74 0b                	je     0x30d
+@@ -380,7 +380,7 @@
+  34f:	e4 71                	in     $0x71,%al
+  351:	a8 02                	test   $0x2,%al
+  353:	74 fa                	je     0x34f
+- 355:	2a c0                	sub    %al,%al
++ 355:	28 c0                	sub    %al,%al
+  357:	e6 72                	out    %al,$0x72
+  359:	c3                   	ret    
+  35a:	53                   	push   %bx
+@@ -418,8 +418,8 @@
+  397:	e4 70                	in     $0x70,%al
+  399:	aa                   	stos   %al,%es:(%di)
+  39a:	e4 71                	in     $0x71,%al
+- 39c:	22 c2                	and    %dl,%al
+- 39e:	3a c6                	cmp    %dh,%al
++ 39c:	20 d0                	and    %dl,%al
++ 39e:	38 f0                	cmp    %dh,%al
+  3a0:	74 ec                	je     0x38e
+  3a2:	eb e0                	jmp    0x384
+  3a4:	87 df                	xchg   %bx,%di
+@@ -442,23 +442,23 @@
+  3bf:	ac                   	lods   %ds:(%si),%al
+  3c0:	e6 70                	out    %al,$0x70
+  3c2:	e4 71                	in     $0x71,%al
+- 3c4:	22 c2                	and    %dl,%al
+- 3c6:	3a c6                	cmp    %dh,%al
++ 3c4:	20 d0                	and    %dl,%al
++ 3c6:	38 f0                	cmp    %dh,%al
+  3c8:	74 f5                	je     0x3bf
+  3ca:	eb e9                	jmp    0x3b5
+  3cc:	87 de                	xchg   %bx,%si
+  3ce:	1f                   	pop    %ds
+  3cf:	5a                   	pop    %dx
+- 3d0:	8b c3                	mov    %bx,%ax
++ 3d0:	89 d8                	mov    %bx,%ax
+  3d2:	5b                   	pop    %bx
+- 3d3:	2b c3                	sub    %bx,%ax
++ 3d3:	29 d8                	sub    %bx,%ax
+  3d5:	c3                   	ret    
+  3d6:	e8 14 00             	call   0x3ed
+  3d9:	e4 70                	in     $0x70,%al
+- 3db:	8a e0                	mov    %al,%ah
++ 3db:	88 c4                	mov    %al,%ah
+  3dd:	e8 0d 00             	call   0x3ed
+  3e0:	e4 70                	in     $0x70,%al
+- 3e2:	8a c4                	mov    %ah,%al
++ 3e2:	88 e0                	mov    %ah,%al
+  3e4:	a8 08                	test   $0x8,%al
+  3e6:	74 02                	je     0x3ea
+  3e8:	f9                   	stc    
+@@ -485,7 +485,7 @@
+  420:	f3 ab                	rep stos %ax,%es:(%di)
+  422:	8c c7                	mov    %es,%di
+  424:	81 c7 00 10          	add    $0x1000,%di
+- 428:	3b f8                	cmp    %ax,%di
++ 428:	39 c7                	cmp    %ax,%di
+  42a:	72 ec                	jb     0x418
+  42c:	e4 71                	in     $0x71,%al
+  42e:	a8 02                	test   $0x2,%al
+@@ -502,9 +502,9 @@
+  44b:	c6 06 c4 0a 20       	movb   $0x20,0xac4
+  450:	e8 15 00             	call   0x468
+  453:	a0 a3 0e             	mov    0xea3,%al
+- 456:	0a c0                	or     %al,%al
++ 456:	08 c0                	or     %al,%al
+  458:	74 0d                	je     0x467
+- 45a:	8b ec                	mov    %sp,%bp
++ 45a:	89 e5                	mov    %sp,%bp
+  45c:	83 7e 02 00          	cmpw   $0x0,0x2(%bp)
+  460:	75 05                	jne    0x467
+  462:	c7 46 02 04 00       	movw   $0x4,0x2(%bp)
+@@ -550,34 +550,44 @@
+  4c8:	5e                   	pop    %si
+  4c9:	59                   	pop    %cx
+  4ca:	74 08                	je     0x4d4
+- 4cc:	81 c6 24 00          	add    $0x24,%si
++ 4cc:	83 c6 24             	add    $0x24,%si
++ 4cf:	90                   	nop    
+  4d0:	e2 ec                	loop   0x4be
+  4d2:	5f                   	pop    %di
+  4d3:	c3                   	ret    
+  4d4:	5f                   	pop    %di
+- 4d5:	81 c6 14 00          	add    $0x14,%si
++ 4d5:	83 c6 14             	add    $0x14,%si
++ 4d8:	90                   	nop    
+  4d9:	b9 04 00             	mov    $0x4,%cx
+  4dc:	51                   	push   %cx
+- 4dd:	8b 8c 00 00          	mov    0x0(%si),%cx
+- 4e1:	8b 84 02 00          	mov    0x2(%si),%ax
++ 4dd:	8b 0c                	mov    (%si),%cx
++ 4df:	90                   	nop    
++ 4e0:	90                   	nop    
++ 4e1:	8b 44 02             	mov    0x2(%si),%ax
++ 4e4:	90                   	nop    
+  4e5:	e8 08 00             	call   0x4f0
+  4e8:	59                   	pop    %cx
+- 4e9:	81 c6 04 00          	add    $0x4,%si
++ 4e9:	83 c6 04             	add    $0x4,%si
++ 4ec:	90                   	nop    
+  4ed:	e2 ed                	loop   0x4dc
+  4ef:	c3                   	ret    
+  4f0:	85 c0                	test   %ax,%ax
+  4f2:	74 26                	je     0x51a
+- 4f4:	89 8d 03 00          	mov    %cx,0x3(%di)
+- 4f8:	03 c8                	add    %ax,%cx
+- 4fa:	89 8d 08 00          	mov    %cx,0x8(%di)
++ 4f4:	89 4d 03             	mov    %cx,0x3(%di)
++ 4f7:	90                   	nop    
++ 4f8:	01 c1                	add    %ax,%cx
++ 4fa:	89 4d 08             	mov    %cx,0x8(%di)
++ 4fd:	90                   	nop    
+  4fe:	b9 18 00             	mov    $0x18,%cx
+  501:	f7 e1                	mul    %cx
+- 503:	05 ff ff             	add    $0xffff,%ax
++ 503:	83 c0 ff             	add    $0xffffffff,%ax
+  506:	83 d2 00             	adc    $0x0,%dx
+  509:	83 fa 09             	cmp    $0x9,%dx
+  50c:	76 04                	jbe    0x512
+- 50e:	89 95 0b 00          	mov    %dx,0xb(%di)
+- 512:	81 c7 0d 00          	add    $0xd,%di
++ 50e:	89 55 0b             	mov    %dx,0xb(%di)
++ 511:	90                   	nop    
++ 512:	83 c7 0d             	add    $0xd,%di
++ 515:	90                   	nop    
+  516:	fe 06 a3 0e          	incb   0xea3
+  51a:	c3                   	ret    
+  51b:	4d                   	dec    %bp
+@@ -739,11 +749,11 @@
+  76b:	1e                   	push   %ds
+  76c:	e8 25 00             	call   0x794
+  76f:	72 10                	jb     0x781
+- 771:	8b f7                	mov    %di,%si
++ 771:	89 fe                	mov    %di,%si
+  773:	e8 9b 00             	call   0x811
+  776:	87 f7                	xchg   %si,%di
+  778:	e8 ed 00             	call   0x868
+- 77b:	2b ce                	sub    %si,%cx
++ 77b:	29 f1                	sub    %si,%cx
+  77d:	06                   	push   %es
+  77e:	1f                   	pop    %ds
+  77f:	f3 a4                	rep movsb %ds:(%si),%es:(%di)
+@@ -818,7 +828,7 @@
+  80c:	c3                   	ret    
+  80d:	b0 3d                	mov    $0x3d,%al
+  80f:	eb 02                	jmp    0x813
+- 811:	32 c0                	xor    %al,%al
++ 811:	30 c0                	xor    %al,%al
+  813:	b9 00 01             	mov    $0x100,%cx
+  816:	f2 ae                	repnz scas %es:(%di),%al
+  818:	c3                   	ret    
+@@ -871,7 +881,7 @@
+  86f:	26 a1 03 00          	mov    %es:0x3,%ax
+  873:	b1 04                	mov    $0x4,%cl
+  875:	d3 e0                	shl    %cl,%ax
+- 877:	8b c8                	mov    %ax,%cx
++ 877:	89 c1                	mov    %ax,%cx
+  879:	58                   	pop    %ax
+  87a:	07                   	pop    %es
+  87b:	c3                   	ret    
