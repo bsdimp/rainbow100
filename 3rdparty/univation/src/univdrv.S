@@ -38,6 +38,10 @@
 
 # Note: we use AT&T syntax for this file.
 
+# Note: Appendix B of http://bitsavers.org/pdf/xebec/104524C_S1410Man_Aug83.pdf
+# has the reference code for the reference design this is almost certainly
+# based on.
+
 # Note, this is a reconstructed driver from a disassembled driver. gas
 # is better at producing code so we have some padding instructions to
 # work through the issues
@@ -48,13 +52,13 @@
 	# These seem to be a general data port
 	# Port 71 is twiddled and/or we wait for bits to be set
 	# and then we transfer data to/from this port.
-	.set	sasi_data_r, 0x70
-	.set	sasi_data_w, 0x70
+	.set	sasi_data_r, 0x70	# AKA WPORT0
+	.set	sasi_data_w, 0x70	# AKA RPORT0
 
 	# This seems to be a status / ISR port.
 	# There's only 1 write of port 71, and that's whatever bits
 	# are set on startup when bit1 (0x2) is set.
-	.set	sasi_status, 0x71
+	.set	sasi_status, 0x71	# AKA RPORT1
 	.set	sasi_status_req, 0x01
 	.set	sasi_status_bsy, 0x02
 	.set	sasi_status_msg, 0x04	# Unused in this driver...
@@ -63,10 +67,10 @@
 	# bit 5 appears unused -- unwired in xebec reference design
 	# bit 6 appears unused -- unwired in xebec reference design
 	# bit 7 appears unused -- unwired in xebec reference design
-	.set	sasi_bus_reset, 0x71	# Writes toggle ~RST
+	.set	sasi_bus_reset, 0x71	# Writes toggle ~RST AKA WPORT1
 
 	# Toggle ~SEL line
-	.set	sasi_bus_select, 0x72
+	.set	sasi_bus_select, 0x72	# AKA WPORT2
 
 	# SCSI op codes
 	.set OP_REQUEST_SENSE, 0x3
