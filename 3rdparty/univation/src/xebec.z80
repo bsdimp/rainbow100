@@ -1,0 +1,186 @@
+;
+; This is pseudo-z80 assembler copied down from appendix B for the
+; Xebec S1410.
+;
+; http://bitsavers.org/pdf/xebec/104524C_S1410Man_Aug83.pdf
+;
+
+wport0	equ	0H		; SASI Write Port 0 - write data
+wport1	equ	1H		; SASI Write Port 1 - Software Reset
+wport2	equ	2H		; SASI Write Port 2 - Controller Select
+;wport3	equ	3H		; SASI Write Port 3 - unused
+
+rport0	equ	0H		; SASI Read Port 0 - Read Data
+rport1	equ	1H		; SASI Read Port 1 - Read Status
+; rport2 and rport3 unused
+
+reqbit	equ	0h	; Request line bit position
+reqmask	equ	1h	; Request mask for bit test
+busybit	equ	1h	; Busy Line bit
+busymask equ	2h	; busy mask
+msgbit	 equ	2h	; Message Line bit position
+msgmask	 equ	4h	; Message mask
+cdbit	 equ	3h	; Command/Data bit position
+cdmask	 equ	8h	; C/D mask
+iobit	 equ	4h	; Input / Output bit position
+iomask	 equ	10h	; I/O bit mask
+
+drvready equ	0h	; Test Drive Ready command
+format	 equ	4h	; Format command code
+read	 equ	8h	; read command code
+write	 equ	ah	; write command code
+sense	 equ	3h	; status sense command code
+initl	 equ	ch	; initialize disk size command
+seek	 equ	bh	; seek command code
+recal	 equ	1h	; recalibrate command code
+ramdiag	 equ	e0h	; RAM Diagnostic command code
+error	 equ	eh	; Test for an error
+
+writebuf ds	512	; write buffer
+readbuf	 ds	512	; read buffer
+stack	 ds	020h	; call stack
+stacktop equ	$
+task	db	0, 0, 0, 0, 1, 80, f, 0, 0, 0, 0
+
+reset:
+	out	(wport1),A	; send out reset pulse
+
+; test for drive ready
+; test to see that the drive is up and ready after controller has
+; been selected
+test1	equ	$
+	ld	sp, stacktop	; set the stack pointer
+	call	selcntlr	; select the controller
+	ld	a, drvready	; drive ready command
+	call	taskout		; send the command
+	call	getstat		; get the completion status
+	jp	Z, test2	; next test
+	rst	038h		; error completion
+
+; recalibrate
+; send out a recalibrate to the controller
+test2	equ	$
+	call	selcntlr	; select the controller
+	ld	a, recal	; send recalibrate
+	call	taskout		; send the command
+	call	getstat		; get the completion status
+	jp	Z, test3	; next test
+	rst	038h		; error completion
+
+; format
+; send a format command to controller
+test3	equ	$
+	call	selcntlr	; select the controller
+	ld	a, format	; format comand
+	call	taskout		; send the command
+	call	getstat		; get the completion status
+	jp	Z, test4	; next test
+	rst	038h		; error completion
+
+; write
+; write out a sector to the disk
+test4	equ	$
+	call	selcntlr	; select the controller
+	ld	a, write	; write comand
+	call	taskout		; send the command
+	ld	hl, writebuf	; point to the write buffer
+	call	reqwawit	; wait for cntlr request
+
+write1	equ	$
+	in	a,(rport1)	; read status lines
+	and	cdmask		;if cmnd, transfer is done
+	jp	nz,write2
+	ld	a, (hl)		; load next byte
+	out	(wport0), a	; send to controller
+	int	hl	  	; next char in buffer
+	hp	write1		; loop
+
+write2	equ	$
+	call	getstat		; get the completion status
+	jp	Z, test5	; next test
+	rst	038h		; error completion
+
+; read
+; read in a sector from the disk
+test5	equ	$
+	call	selcntlr	; select the controller
+	ld	a, read		; read comand
+	call	taskout		; send the command
+	ld	hl, readbuf	; point to the read buffer
+	call	reqwawit	; wait for cntlr request
+
+read1	equ	$
+	in	a,(rport1)	; read status lines
+	and	cdmask		;if cmnd, transfer is done
+	jp	nz,read2
+	in	a,(rport0)	; read in byte
+	ld	(hl),a		; load next byte
+	int	hl	  	; next char in buffer
+	hp	read1		; loop
+
+read2	equ	$
+	call	getstat		; get the completion status
+	jp	Z, test6	; next test
+	rst	038h		; error completion
+test6	equ	$
+	rst	038h		; completion
+
+; selcntlr
+; this subroutine selects the default controller
+
+selcntlr equ	$
+	in	a,(rport1)	; read status lines
+	and	busymask	; look at busy bit
+	jp	nz,selcntlr	; loop if busy
+	ld	a,1		; controller default select code
+	out	(wport0),a	; send it to transparent latch
+	out	(wport2),a	; generate select strobe
+sel1	equ	$
+	in	a,(rport1)	; read status lines
+	and	busymask	; look at busy bit
+	jp	nz,sel1		; loop if busy
+	ret			; busy has arrived, exit
+
+; taskout
+; this subroutine sends out the command contained in A register
+; to the disk controller
+
+taskout	equ	$
+	ld	HL, task	; point to task control block
+	ld	(hl), A		; save command
+	LD	b, 6		; byte count
+	call	reqwait		; wait for controller request
+
+task1	equ	$
+	ld	A, (hl)		; get command byte
+	out	(wport0),A	; send to controller
+	inc	hl
+	dec	b
+	jp	nz,task1
+	ret
+
+; getstat This subroutine retrieves the status byte and the null byte from the
+; disk controller at the end of a command. the a register is returned with a
+; non-zero value if error has been detected.
+
+getstat	equ	$
+	call	reqwait		; wait for request
+	in	a,(port0)	; read in the status byte
+	ld	d,a		; save in D
+	call	reqwait		; wait for request
+	in	a,(port0)	; get the null byte
+	ld	a,d		; restore status
+	and	error		; mask off the error bits
+	ret
+
+; reqwait
+; This subroutine waits for the request line to be come active
+; from the disk controller
+
+reqwait equ	$
+	in	a,(rport1)	; read status
+	and	reqmask		; req set?
+	jp	z,reqwait	; nope, loop
+	ret
+
+END
